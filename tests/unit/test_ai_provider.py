@@ -2,7 +2,6 @@
 Unit Tests: AI Provider Abstraction, Schema Validation, & Graceful Degradation.
 """
 
-import asyncio
 import pytest
 from backend.app.core.exceptions import AIConfigurationRequiredError
 from backend.app.domain.intelligence.models import (
@@ -14,44 +13,48 @@ from backend.app.infrastructure.ai.factory import MissingConfigProvider, get_ai_
 from backend.app.infrastructure.ai.mock_adapter import MockAIProvider
 
 
-def test_mock_ai_provider_extracts_real_clauses():
-    async def _test():
-        provider = MockAIProvider()
-        doc_text = (
-            "Request for Proposal: Tender No: RFP-2026-CLOUD-99\n"
-            "Issued by: Department of Technology\n"
-            "Clause 1: Minimum annual turnover of USD 5,000,000 required in the last 3 years.\n"
-            "Clause 2: Bidder must have 7 years of experience in distributed cloud deployments.\n"
-            "Clause 3: Bid Security / EMD deposit of USD 25,000 must accompany technical proposal.\n"
-        )
+def run_sync(coro):
+    """Synchronously advance and resolve a coroutine without event loop overhead."""
+    try:
+        coro.send(None)
+    except StopIteration as e:
+        return e.value
 
-        structured, meta = await provider.extract_intelligence(
+
+def test_mock_ai_provider_extracts_real_clauses():
+    provider = MockAIProvider()
+    doc_text = (
+        "Request for Proposal: Tender No: RFP-2026-CLOUD-99\n"
+        "Issued by: Department of Technology\n"
+        "Clause 1: Minimum annual turnover of USD 5,000,000 required in the last 3 years.\n"
+        "Clause 2: Bidder must have 7 years of experience in distributed cloud deployments.\n"
+        "Clause 3: Bid Security / EMD deposit of USD 25,000 must accompany technical proposal.\n"
+    )
+
+    structured, meta = run_sync(
+        provider.extract_intelligence(
             document_text=doc_text,
             prompt_template="{document_content}",
             parameters={},
         )
+    )
 
-        assert isinstance(structured, StructuredTenderIntelligence)
-        assert structured.general_info.reference_number == "RFP-2026-CLOUD-99"
-        assert len(structured.requirements) >= 3
+    assert isinstance(structured, StructuredTenderIntelligence)
+    assert structured.general_info.reference_number == "RFP-2026-CLOUD-99"
+    assert len(structured.requirements) >= 3
 
-        # Check requirement provenance
-        turnover_req = next((r for r in structured.requirements if "turnover" in r.source_excerpt.lower()), None)
-        assert turnover_req is not None
-        assert turnover_req.category == "eligibility"
-        assert turnover_req.source_page == 1
-        assert "5,000,000" in turnover_req.source_excerpt
-
-    asyncio.run(_test())
+    # Check requirement provenance
+    turnover_req = next((r for r in structured.requirements if "turnover" in r.source_excerpt.lower()), None)
+    assert turnover_req is not None
+    assert turnover_req.category == "eligibility"
+    assert turnover_req.source_page == 1
+    assert "5,000,000" in turnover_req.source_excerpt
 
 
 def test_missing_config_provider_raises():
-    async def _test():
-        missing_provider = MissingConfigProvider()
-        with pytest.raises(AIConfigurationRequiredError):
-            await missing_provider.extract_intelligence("text", "tmpl", {})
-
-    asyncio.run(_test())
+    missing_provider = MissingConfigProvider()
+    with pytest.raises(AIConfigurationRequiredError):
+        run_sync(missing_provider.extract_intelligence("text", "tmpl", {}))
 
 
 def test_structured_intelligence_schema_validation():

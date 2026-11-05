@@ -1,0 +1,89 @@
+version: "3.9"
+
+services:
+  # 1. PostgreSQL Database Service
+  db:
+    image: postgres:16-alpine
+    container_name: tenderforge_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tenderforge
+      POSTGRES_PASSWORD: tenderforge_secure_password_2026
+      POSTGRES_DB: tenderforge_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - tenderforge_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tenderforge -d tenderforge_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # 2. FastAPI Backend Service
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: tenderforge_backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: production
+      APP_NAME: TenderForge
+      DATABASE_URL: postgresql://tenderforge:tenderforge_secure_password_2026@db:5432/tenderforge_db
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-tenderforge-production-master-secret-key-2026}
+      JWT_ACCESS_TOKEN_EXPIRE_MINUTES: 1440
+      BCRYPT_ROUNDS: 12
+      STORAGE_ROOT: /app/storage
+      STORAGE_PROVIDER: local
+      LOG_LEVEL: INFO
+    volumes:
+      - tenderforge_storage:/app/storage
+    ports:
+      - "8000:8000"
+    networks:
+      - tenderforge_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # 3. Enterprise Frontend & Reverse Proxy
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: tenderforge_frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    networks:
+      - tenderforge_net
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  postgres_data:
+    name: tenderforge_postgres_data
+  tenderforge_storage:
+    name: tenderforge_storage_data
+
+networks:
+  tenderforge_net:
+    name: tenderforge_network
+    driver: bridge

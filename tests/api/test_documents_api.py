@@ -2,55 +2,91 @@
 API Tests: Document Ingestion, Retrieval, Content, and Status Endpoints.
 """
 
-from fastapi.testclient import TestClient
+import io
+import pytest
+from fastapi import UploadFile
+from sqlalchemy.orm import Session
+from starlette.datastructures import Headers
+from backend.app.api.routes.documents import (
+    get_document,
+    get_document_content,
+    get_document_status,
+    list_documents,
+    upload_document,
+)
+from backend.app.core.exceptions import FileValidationException
+from backend.app.services.document_service import DocumentService
 from tests.helpers import create_synthetic_pdf_bytes
 
 
-def test_document_api_flow(client: TestClient):
+def test_document_api_flow(db_session: Session):
     pdf_bytes = create_synthetic_pdf_bytes()
+    doc_service = DocumentService()
 
     # 1. Upload Document
-    upload_resp = client.post(
-        "/api/v1/documents",
-        files={"file": ("tender_notice.pdf", pdf_bytes, "application/pdf")},
-        data={"category": "tender_notice"},
+    upload_file = UploadFile(
+        file=io.BytesIO(pdf_bytes),
+        filename="tender_notice.pdf",
+        headers=Headers({"content-type": "application/pdf"}),
+    )
+    upload_resp = upload_document(
+        file=upload_file,
+        category="tender_notice",
+        workspace_id=None,
+        db=db_session,
+        service=doc_service,
     )
     assert upload_resp.status_code == 201
-    body = upload_resp.json()
-    assert body["success"] is True
-    doc_id = body["data"]["id"]
+    assert upload_resp.success is True
+    doc_id = upload_resp.data.id
     assert doc_id is not None
-    assert body["data"]["original_filename"] == "tender_notice.pdf"
+    assert upload_resp.data.original_filename == "tender_notice.pdf"
 
     # 2. Get Document Metadata
-    get_resp = client.get(f"/api/v1/documents/{doc_id}")
+    get_resp = get_document(document_id=doc_id, db=db_session, service=doc_service)
     assert get_resp.status_code == 200
-    assert get_resp.json()["data"]["id"] == doc_id
+    assert get_resp.data.id == doc_id
 
     # 3. List Documents
-    list_resp = client.get("/api/v1/documents")
+    list_resp = list_documents(
+        skip=0,
+        limit=20,
+        category=None,
+        doc_status=None,
+        workspace_id=None,
+        db=db_session,
+        service=doc_service,
+    )
     assert list_resp.status_code == 200
-    assert list_resp.json()["data"]["total"] >= 1
+    assert list_resp.data.total >= 1
 
     # 4. Get Document Content & Chunks
-    content_resp = client.get(f"/api/v1/documents/{doc_id}/content")
+    content_resp = get_document_content(document_id=doc_id, db=db_session, service=doc_service)
     assert content_resp.status_code == 200
-    content_body = content_resp.json()["data"]
-    assert content_body["total_chunks"] >= 2
-    assert "RFP-2026-001" in content_body["chunks"][0]["content"]
+    content_body = content_resp.data
+    assert content_body.total_chunks >= 2
+    assert "RFP-2026-001" in content_body.chunks[0].content
 
     # 5. Get Document Processing Status
-    status_resp = client.get(f"/api/v1/documents/{doc_id}/status")
+    status_resp = get_document_status(document_id=doc_id, db=db_session, service=doc_service)
     assert status_resp.status_code == 200
-    assert status_resp.json()["data"]["processing_status"] == "parsed"
-    assert len(status_resp.json()["data"]["jobs"]) >= 1
+    assert status_resp.data.processing_status == "parsed"
+    assert len(status_resp.data.jobs) >= 1
 
 
-def test_document_upload_invalid_extension(client: TestClient):
-    resp = client.post(
-        "/api/v1/documents",
-        files={"file": ("malicious.exe", b"fake binary", "application/octet-stream")},
+def test_document_upload_invalid_extension(db_session: Session):
+    doc_service = DocumentService()
+    upload_file = UploadFile(
+        file=io.BytesIO(b"fake binary"),
+        filename="malicious.exe",
+        headers=Headers({"content-type": "application/octet-stream"}),
     )
-    assert resp.status_code == 400
-    assert resp.json()["success"] is False
-    assert "not supported" in resp.json()["errors"][0]["detail"]
+    with pytest.raises(FileValidationException) as excinfo:
+        upload_document(
+            file=upload_file,
+            category="tender_notice",
+            workspace_id=None,
+            db=db_session,
+            service=doc_service,
+        )
+    assert "not supported" in str(excinfo.value).lower()

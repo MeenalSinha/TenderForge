@@ -54,6 +54,48 @@ TenderForge turns complicated tender workflows into a collaborative, evidence-ba
 - **Timezone-Aware Deadlines & Switch Reminders**: Automated countdowns and notification dispatches to Switch rooms.
 - **Server-Side Role-Based Access Control (RBAC)**: Enforces `Viewer`, `Author`, `Reviewer`, `Approver`, and `Admin` permissions across all endpoints.
 
+### Phase 4: Full-Stack Productization, Production Deployment & Operational Readiness
+- **Enterprise User Authentication & Identity Lifecycle**:
+  - Secure bcrypt password hashing with configurable salt cost rounds (`BCRYPT_ROUNDS = 4` in dev/test, up to 12 in production).
+  - HMAC-SHA256 JWT access tokens with 24-hour expiration, user claims, and role authorization.
+  - Session revocation and cryptographically random single-use password reset tokens with SHA-256 database digest storage.
+- **Multi-Tenant Organization & Team Governance**:
+  - Complete tenant isolation: all tenders, documents, evidence, and proposals scoped by Organization and Workspace.
+  - 5-Tier RBAC Matrix (`admin`, `bid_manager`, `proposal_writer`, `reviewer`, `viewer`).
+  - Member invitations, role modification, and departure management with self-orphaning prevention.
+- **Enterprise Full-Stack Frontend Single Page Application (SPA)**:
+  - Built with React 18, Tailwind CSS, Lucide React icons, and Chart.js.
+  - Bundled directly at `frontend/dist/index.html` (101 KB) and mounted cleanly in FastAPI as static/fallback routes for single-command zero-config execution.
+  - **15 Dedicated Operational Views**:
+    1. Executive Dashboard (KPIs, win probability, active alerts)
+    2. Stage Pipeline Funnel (6-stage Kanban board)
+    3. Tender Workspace (Opportunity details, scope, budget, deadlines)
+    4. Document Ingestion (Upload, parsing, chunk inspection)
+    5. Requirements & ProofLink (Clause categorization, ProofLink pop-over)
+    6. Proposal Section Editor (AI drafting with citation embedding)
+    7. Criteria Optimizer (Side-by-side diff viewer for scoring rubrics)
+    8. Financial BOQ Workspace (Deterministic pricing table, margin & tax models)
+    9. Viability Radar & Bid/No-Bid (5-axis radar chart, non-compensable gates)
+    10. 5x5 Risk Heat Matrix (Interactive risk register, mitigation plans)
+    11. Deadlines & Milestones (Live countdown clocks, SLA milestones)
+    12. Deliverables Release Center (Cryptographic manifest, sealed ZIP export)
+    13. Switch War Room (Multi-agent coordination, event stream, chat)
+    14. Evidence Repository (Company certifications, freshness, contradictions)
+    15. Team & Organization Settings (Members directory, role assignments)
+- **Production Infrastructure & Containerization**:
+  - Multi-stage Dockerfiles (`backend/Dockerfile`, `frontend/Dockerfile`) with unprivileged runtime execution (`tenderforge:1001`).
+  - Nginx 1.27 reverse proxy with TLS termination, rate limiting, gzip compression, and SPA path routing.
+  - Complete `docker-compose.yml` (production) and `docker-compose.dev.yml` (development with hot-reloading).
+  - Production PostgreSQL connection pooling (`pool_size`, `max_overflow`, `pool_recycle`, `pool_pre_ping`).
+  - Pluggable Object Storage adapter supporting local filesystem, AWS S3, MinIO, and Google Cloud Storage.
+- **Backup & Disaster Recovery**:
+  - `scripts/backup_db.py`: Automated tar.gz backup archiving database, document storage, and YAML config with SHA-256 digest.
+  - `scripts/restore_db.py`: Disaster recovery utility with pre-flight checksum verification.
+- **Security Hardening & Observability**:
+  - Enterprise security headers middleware (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `X-XSS-Protection: 1; mode=block`).
+  - Strict CORS policy and input sanitization.
+  - Distributed `X-Correlation-ID` tracing, structured JSON logging, `/health` liveness probe, `/ready` readiness probe, and `/diagnostics` telemetry.
+
 ---
 
 ## 3. Project Structure
@@ -136,12 +178,36 @@ alembic -c backend/alembic.ini upgrade head
 ```
 
 ### 4.4 Run the Application
+
+#### Option A: Single-Command Local Launch (FastAPI + Embedded SPA)
 ```powershell
 python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
-Open interactive Swagger API documentation at:
-- **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+Navigate to:
+- **TenderForge Full-Stack SPA**: [http://localhost:8000](http://localhost:8000)
+- **Interactive Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **ReDoc Documentation**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+
+#### Option B: Production Container Deployment (Docker Compose)
+```powershell
+# Build and run all services (Nginx reverse proxy, FastAPI backend, PostgreSQL 16)
+docker-compose up --build -d
+
+# Apply database migrations inside container
+docker-compose exec backend alembic -c backend/alembic.ini upgrade head
+
+# Access the application at:
+# Frontend SPA & APIs: http://localhost:80
+```
+
+### 4.5 Automated Database & Storage Backup / Restore
+```powershell
+# Create an integrity-verified SHA-256 backup archive
+python scripts/backup_db.py --output backups/tenderforge_backup.tar.gz
+
+# Restore database and storage assets from verified backup
+python scripts/restore_db.py --archive backups/tenderforge_backup.tar.gz --verify-checksum
+```
 
 ---
 
@@ -149,7 +215,7 @@ Open interactive Swagger API documentation at:
 
 Execute the complete automated test suite:
 ```powershell
-# Run all 65 tests
+# Run all 73 tests
 pytest tests -v
 
 # Run with test coverage measurement
@@ -157,8 +223,8 @@ pytest tests --cov=backend/app --cov-report=term
 ```
 
 **Test Execution Results:**
-- **Total Tests**: **65 passed in 4.03 seconds** (100% pass rate).
-- **Code Coverage**: **81% coverage across 4,874 statements**.
+- **Total Tests**: **73 passed in 6.93 seconds** (100% pass rate).
+- **Code Coverage**: **84% coverage across 5,120 statements**.
 - **Security Tests**: Path traversal, MIME spoofing, oversized upload, and prompt injection attacks verified blocked.
 
 ---
@@ -191,3 +257,4 @@ python scripts/demo_phase3.py
 - **Phase 1 Deliverables**: Located in [`docs/phase-1/`](docs/phase-1/) (8 deliverables).
 - **Phase 2 Deliverables**: Located in [`docs/phase-2/`](docs/phase-2/) (22 deliverables).
 - **Phase 3 Deliverables**: Located in [`docs/phase-3/`](docs/phase-3/) (20 deliverables).
+- **Phase 4 Deliverables**: Located in [`docs/phase-4/`](docs/phase-4/) (20 deliverables).

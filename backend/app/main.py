@@ -4,12 +4,16 @@ TenderForge Main Application Factory & ASGI Entrypoint.
 
 from __future__ import annotations
 
+import os
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+
 from backend.app.api.routes import (
     compliance_router,
     documents_router,
@@ -27,6 +31,8 @@ from backend.app.api.routes import (
     deadlines_router,
     analytics_router,
     optimizations_router,
+    auth_router,
+    organizations_router,
 )
 from backend.app.api.schemas.common import ErrorDetail, ResponseEnvelope
 from backend.app.core.config import settings
@@ -69,6 +75,32 @@ class CorrelationIdMiddleware:
             await self.app(scope, receive, send)
 
 
+class SecurityHeadersMiddleware:
+    """ASGI middleware applying enterprise defense-in-depth HTTP security headers."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            async def send_wrapper(message):
+                if message["type"] == "http.response.start":
+                    headers = list(message.get("headers", []))
+                    headers.extend([
+                        (b"x-content-type-options", b"nosniff"),
+                        (b"x-frame-options", b"DENY"),
+                        (b"x-xss-protection", b"1; mode=block"),
+                        (b"referrer-policy", b"strict-origin-when-cross-origin"),
+                        (b"permissions-policy", b"camera=(), microphone=(), geolocation=()"),
+                    ])
+                    message["headers"] = headers
+                await send(message)
+
+            await self.app(scope, receive, send_wrapper)
+        else:
+            await self.app(scope, receive, send)
+
+
 def create_app() -> FastAPI:
     """Application factory configuring routes, middleware, and exception handlers."""
     app = FastAPI(
@@ -82,6 +114,7 @@ def create_app() -> FastAPI:
 
     # 1. Middlewares
     app.add_middleware(CorrelationIdMiddleware)
+    app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.CORS_ORIGINS,
@@ -112,7 +145,7 @@ def create_app() -> FastAPI:
                 code="REQUEST_VALIDATION_ERROR",
                 detail=f"{'.'.join(str(loc) for loc in err['loc'])}: {err['msg']}",
             )
-            for err in exc.errors()
+        for err in exc.errors()
         ]
         envelope = ResponseEnvelope[None](
             success=False,
@@ -145,8 +178,10 @@ def create_app() -> FastAPI:
             content=envelope.model_dump(mode="json"),
         )
 
-    # 3. Mount Routers
+    # 3. Mount REST API Routers
     app.include_router(health_router)
+    app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(organizations_router, prefix=settings.API_V1_PREFIX)
     app.include_router(documents_router, prefix=settings.API_V1_PREFIX)
     app.include_router(tenders_router, prefix=settings.API_V1_PREFIX)
     app.include_router(evidence_router, prefix=settings.API_V1_PREFIX)
@@ -162,6 +197,22 @@ def create_app() -> FastAPI:
     app.include_router(deadlines_router, prefix=settings.API_V1_PREFIX)
     app.include_router(analytics_router, prefix=settings.API_V1_PREFIX)
     app.include_router(optimizations_router, prefix=settings.API_V1_PREFIX)
+
+    # 4. Optional Static Assets & SPA Routing for Enterprise Frontend
+    dist_dir = Path("frontend/dist")
+    if dist_dir.exists() and (dist_dir / "index.html").exists():
+        assets_dir = dist_dir / "assets"
+        if assets_dir.exists():
+            app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
+
+        @app.get("/{full_path:path}", include_in_schema=False)
+        async def serve_spa(full_path: str):
+            if full_path.startswith("api/") or full_path in ("docs", "redoc", "openapi.json"):
+                return JSONResponse(status_code=404, content={"detail": "Not Found"})
+            file_path = dist_dir / full_path
+            if file_path.is_file():
+                return FileResponse(file_path)
+            return FileResponse(dist_dir / "index.html")
 
     return app
 

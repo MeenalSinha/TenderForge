@@ -15,6 +15,8 @@ from backend.app.api.routes.risks import router as risks_router
 from backend.app.api.routes.deadlines import router as deadlines_router
 from backend.app.api.routes.analytics import router as analytics_router
 from backend.app.api.routes.optimizations import router as optimizations_router
+from backend.app.api.routes.auth import router as auth_router
+from backend.app.api.routes.organizations import router as organizations_router
 
 __all__ = [
     "health_router",
@@ -33,4 +35,6 @@ __all__ = [
     "deadlines_router",
     "analytics_router",
     "optimizations_router",
+    "auth_router",
+    "organizations_router",
 ]

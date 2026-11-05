@@ -14,8 +14,8 @@ env/
 !.env.example
 
 # Local storage and temporary files
-storage/
-temp_uploads/
+/storage/
+/temp_uploads/
 *.log
 *.sqlite
 *.sqlite3

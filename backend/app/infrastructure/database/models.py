@@ -43,6 +43,7 @@ class Organization(Base):
     profile = relationship("OrganizationProfile", uselist=False, back_populates="organization", cascade="all, delete-orphan")
     evidence = relationship("CompanyEvidence", back_populates="organization", cascade="all, delete-orphan")
     contradictions = relationship("EvidenceContradiction", back_populates="organization", cascade="all, delete-orphan")
+    members = relationship("OrganizationMember", back_populates="organization", cascade="all, delete-orphan")
 
 
 class Workspace(Base):
@@ -723,6 +724,75 @@ class UserRole(Base):
     __table_args__ = (
         Index("ix_user_roles_ws_user", "workspace_id", "user_id"),
     )
+
+
+# ---------------------------------------------------------------------------
+# Phase 4 Models: Authentication, Users, Sessions, and Organization Members
+# ---------------------------------------------------------------------------
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    hashed_password = Column(String(255), nullable=False)
+    full_name = Column(String(255), nullable=False)
+    role = Column(String(64), default="Author", nullable=False)  # Viewer, Author, Reviewer, Approver, Admin
+    is_active = Column(Boolean, default=True, nullable=False)
+    is_verified = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    organization_memberships = relationship("OrganizationMember", back_populates="user", cascade="all, delete-orphan")
+    sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
+    reset_tokens = relationship("PasswordResetToken", back_populates="user", cascade="all, delete-orphan")
+
+
+class OrganizationMember(Base):
+    __tablename__ = "organization_members"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    organization_id = Column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    role = Column(String(64), default="Author", nullable=False)  # Viewer, Author, Reviewer, Approver, Admin
+    invited_by = Column(String(128), nullable=True)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+    organization = relationship("Organization", back_populates="members")
+    user = relationship("User", back_populates="organization_memberships")
+
+    __table_args__ = (
+        Index("ix_org_members_org_user", "organization_id", "user_id", unique=True),
+    )
+
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    token_hash = Column(String(64), nullable=False, index=True)
+    expires_at = Column(DateTime, nullable=False)
+    is_used = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+    user = relationship("User", back_populates="reset_tokens")
+
+
+class UserSession(Base):
+    __tablename__ = "user_sessions"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    token_hash = Column(String(64), nullable=False, index=True)
+    ip_address = Column(String(64), nullable=True)
+    user_agent = Column(String(255), nullable=True)
+    expires_at = Column(DateTime, nullable=False)
+    is_revoked = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+    user = relationship("User", back_populates="sessions")
+
 
 
 

@@ -4,8 +4,28 @@ API Integration tests for Phase 3 REST endpoints and Server-Side RBAC.
 
 from datetime import datetime, timedelta, timezone
 import pytest
-from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
+from backend.app.api.routes.analytics import get_workspace_analytics
+from backend.app.api.routes.bid_decision import (
+    EvaluateBidRequest,
+    HumanDecisionRequest,
+    evaluate_tender,
+    get_latest_bid_evaluation,
+    record_human_bid_decision,
+)
+from backend.app.api.routes.deadlines import CreateDeadlineRequest, create_deadline
+from backend.app.api.routes.financial import (
+    AddLineItemRequest,
+    CreateFinancialProposalRequest,
+    add_line_item,
+    create_financial_proposal,
+    export_excel,
+    generate_scenarios,
+)
+from backend.app.api.routes.optimizations import validate_proposal_quality
+from backend.app.api.routes.portfolio import get_portfolio_overview
+from backend.app.api.routes.risks import CreateRiskRequest, create_risk
 from backend.app.infrastructure.database.models import (
     Organization,
     OrganizationProfile,
@@ -17,7 +37,7 @@ from backend.app.infrastructure.database.models import (
 
 
 @pytest.fixture
-def phase3_api_setup(db_session):
+def phase3_api_setup(db_session: Session):
     org = Organization(name="API Test Org", slug="api-org-p3")
     db_session.add(org)
     db_session.commit()
@@ -66,155 +86,106 @@ def phase3_api_setup(db_session):
     return ws, tender, prop
 
 
-def test_bid_evaluation_api_flow(client: TestClient, phase3_api_setup):
+def test_bid_evaluation_api_flow(db_session: Session, phase3_api_setup):
     ws, tender, prop = phase3_api_setup
 
     # 1. Trigger Bid Evaluation
-    res = client.post(
-        f"/api/v1/tenders/{tender.id}/bid-evaluation",
-        json={"evaluator_type": "agent", "evaluator_id": "BidEngine"},
-        headers={"X-User-Role": "Reviewer"},
-    )
-    assert res.status_code == 201
-    data = res.json()
+    eval_req = EvaluateBidRequest(evaluator_type="agent", evaluator_id="BidEngine")
+    data = evaluate_tender(tender_id=tender.id, payload=eval_req, db=db_session, _role="reviewer")
     assert "recommendation" in data
     assert "overall_score" in data
     eval_id = data["evaluation_id"]
 
     # 2. Query Latest Evaluation
-    res_get = client.get(
-        f"/api/v1/tenders/{tender.id}/bid-evaluation",
-        headers={"X-User-Role": "Viewer"},
-    )
-    assert res_get.status_code == 200
-    assert res_get.json()["evaluation_id"] == eval_id
+    data_get = get_latest_bid_evaluation(tender_id=tender.id, db=db_session, _role="viewer")
+    assert data_get["evaluation_id"] == eval_id
 
     # 3. Record Human Decision
-    res_dec = client.post(
-        f"/api/v1/bid-evaluations/{eval_id}/decision",
-        json={
-            "decision": "APPROVED_BID",
-            "user_id": "usr-dir-01",
-            "user_name": "Director Lee",
-            "rationale": "High strategic value account approved by management.",
-        },
-        headers={"X-User-Role": "Approver"},
+    dec_req = HumanDecisionRequest(
+        decision="APPROVED_BID",
+        user_id="usr-dir-01",
+        user_name="Director Lee",
+        rationale="High strategic value account approved by management.",
     )
-    assert res_dec.status_code == 200
-    assert res_dec.json()["human_decision"] == "APPROVED_BID"
+    data_dec = record_human_bid_decision(evaluation_id=eval_id, payload=dec_req, db=db_session, _role="approver")
+    assert data_dec["human_decision"] == "APPROVED_BID"
 
 
-def test_financial_workspace_api_flow(client: TestClient, phase3_api_setup):
+def test_financial_workspace_api_flow(db_session: Session, phase3_api_setup):
     ws, tender, prop = phase3_api_setup
 
     # 1. Create Financial Proposal
-    res = client.post(
-        f"/api/v1/tenders/{tender.id}/financial-proposal",
-        json={
-            "title": "Commercial Pricing BOQ",
-            "currency": "USD",
-            "tax_rate_percent": "10.00",
-            "margin_rate_percent": "15.00",
-            "initial_items": [
-                {"item_code": "DEV-01", "description": "Cloud Engineer", "unit": "hrs", "quantity": "100", "unit_rate": "120.00"}
-            ],
-        },
-        headers={"X-User-Role": "Author"},
+    fin_req = CreateFinancialProposalRequest(
+        title="Commercial Pricing BOQ",
+        currency="USD",
+        tax_rate_percent="10.00",
+        margin_rate_percent="15.00",
+        initial_items=[
+            {"item_code": "DEV-01", "description": "Cloud Engineer", "unit": "hrs", "quantity": "100", "unit_rate": "120.00"}
+        ],
     )
-    assert res.status_code == 201
-    data = res.json()
+    data = create_financial_proposal(tender_id=tender.id, payload=fin_req, db=db_session, _role="author")
     fin_id = data["id"]
     assert data["subtotal"] == "12000.00"
 
     # 2. Add Line Item
-    res_add = client.post(
-        f"/api/v1/financial-proposals/{fin_id}/line-items",
-        json={
-            "item_code": "INF-02",
-            "description": "Server Hosting",
-            "category": "Hardware",
-            "unit": "month",
-            "quantity": "12.00",
-            "unit_rate": "500.00",
-        },
-        headers={"X-User-Role": "Author"},
+    item_req = AddLineItemRequest(
+        item_code="INF-02",
+        description="Server Hosting",
+        category="Hardware",
+        unit="month",
+        quantity="12.00",
+        unit_rate="500.00",
     )
-    assert res_add.status_code == 201
+    item_data = add_line_item(proposal_id=fin_id, payload=item_req, db=db_session, _role="author")
+    assert item_data["id"] is not None
 
     # 3. Generate Scenarios
-    res_scen = client.post(
-        f"/api/v1/financial-proposals/{fin_id}/scenarios",
-        headers={"X-User-Role": "Reviewer"},
-    )
-    assert res_scen.status_code == 200
-    assert len(res_scen.json()) == 3
+    scenarios = generate_scenarios(proposal_id=fin_id, db=db_session, _role="reviewer")
+    assert len(scenarios) == 3
 
     # 4. Export Excel
-    res_exp = client.get(
-        f"/api/v1/financial-proposals/{fin_id}/export-excel",
-        headers={"X-User-Role": "Viewer"},
-    )
-    assert res_exp.status_code == 200
-    assert res_exp.headers["content-type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    resp = export_excel(proposal_id=fin_id, db=db_session, _role="viewer")
+    assert resp.media_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
-def test_risks_and_deadlines_api_flow(client: TestClient, phase3_api_setup):
+def test_risks_and_deadlines_api_flow(db_session: Session, phase3_api_setup):
     ws, tender, prop = phase3_api_setup
 
     # 1. Create Risk
-    res_risk = client.post(
-        f"/api/v1/tenders/{tender.id}/risks",
-        json={
-            "title": "Unclear SLA Penalties",
-            "category": "Legal_Commercial",
-            "likelihood": 3,
-            "impact": 4,
-            "description": "Clause 8.4 mentions uncapped liquidated damages.",
-            "mitigation_strategy": "Submit clarification request before query deadline.",
-        },
-        headers={"X-User-Role": "Author"},
+    risk_req = CreateRiskRequest(
+        title="Unclear SLA Penalties",
+        category="Legal_Commercial",
+        likelihood=3,
+        impact=4,
+        description="Clause 8.4 mentions uncapped liquidated damages.",
+        mitigation_strategy="Submit clarification request before query deadline.",
     )
-    assert res_risk.status_code == 201
-    assert res_risk.json()["risk_level"] == "Medium"
+    res_risk = create_risk(tender_id=tender.id, payload=risk_req, db=db_session, _role="author")
+    assert res_risk["risk_level"] == "Medium"
 
     # 2. Create Deadline
-    dl_time = (datetime.now(timezone.utc) + timedelta(days=5)).isoformat()
-    res_dl = client.post(
-        f"/api/v1/tenders/{tender.id}/deadlines",
-        json={
-            "deadline_type": "Query Submission",
-            "title": "Vendor Query Cutoff",
-            "deadline_date": dl_time,
-        },
-        headers={"X-User-Role": "Author"},
+    dl_time = datetime.now(timezone.utc) + timedelta(days=5)
+    dl_req = CreateDeadlineRequest(
+        deadline_type="Query Submission",
+        title="Vendor Query Cutoff",
+        deadline_date=dl_time,
     )
-    assert res_dl.status_code == 201
+    res_dl = create_deadline(tender_id=tender.id, payload=dl_req, db=db_session, _role="author")
+    assert res_dl["title"] == "Vendor Query Cutoff"
 
 
-def test_quality_and_portfolio_api_flow(client: TestClient, phase3_api_setup):
+def test_quality_and_portfolio_api_flow(db_session: Session, phase3_api_setup):
     ws, tender, prop = phase3_api_setup
 
     # 1. Quality Check
-    res_qc = client.post(
-        f"/api/v1/proposals/{prop.id}/quality-check",
-        headers={"X-User-Role": "Reviewer"},
-    )
-    assert res_qc.status_code == 200
-    data_qc = res_qc.json()
+    data_qc = validate_proposal_quality(proposal_id=prop.id, checked_by="QualityAuditor", db=db_session, _role="reviewer")
     assert data_qc["placeholder_count"] >= 1
 
     # 2. Portfolio Overview
-    res_port = client.get(
-        f"/api/v1/workspaces/{ws.id}/portfolio",
-        headers={"X-User-Role": "Viewer"},
-    )
-    assert res_port.status_code == 200
-    assert res_port.json()["total_tenders"] == 1
+    data_port = get_portfolio_overview(workspace_id=ws.id, db=db_session, _role="viewer")
+    assert data_port["total_tenders"] == 1
 
     # 3. Workspace Analytics
-    res_ana = client.get(
-        f"/api/v1/workspaces/{ws.id}/analytics",
-        headers={"X-User-Role": "Viewer"},
-    )
-    assert res_ana.status_code == 200
-    assert "pipeline" in res_ana.json()
+    data_ana = get_workspace_analytics(workspace_id=ws.id, db=db_session, _role="viewer")
+    assert "pipeline" in data_ana

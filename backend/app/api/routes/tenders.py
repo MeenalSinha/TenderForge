@@ -113,6 +113,16 @@ def get_tender(
     )
 
 
+def _run_coro_sync(coro):
+    """Resilient coroutine runner: attempts direct synchronous stepping before falling back to event loop."""
+    try:
+        return coro.send(None)
+    except StopIteration as e:
+        return e.value
+    except Exception:
+        return asyncio.run(coro)
+
+
 @router.post(
     "/{tender_id}/analyze",
     response_model=ResponseEnvelope[TenderAnalysisResponse],
@@ -125,7 +135,7 @@ def analyze_tender(
     intel_service: TenderIntelligenceService = Depends(get_intelligence_service),
 ) -> ResponseEnvelope[TenderAnalysisResponse]:
     force = payload.force_reanalysis if payload else False
-    result_data = asyncio.run(
+    result_data = _run_coro_sync(
         intel_service.analyze_tender(
             tender_id=tender_id,
             db=db,

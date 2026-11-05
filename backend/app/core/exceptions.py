@@ -58,3 +58,29 @@ class StorageException(TenderForgeException):
     status_code = 500
     code = "STORAGE_ERROR"
 
+
+class AuthenticationException(TenderForgeException):
+    status_code = 401
+    code = "AUTHENTICATION_ERROR"
+
+
+class AuthorizationException(TenderForgeException):
+    status_code = 403
+    code = "AUTHORIZATION_ERROR"
+
+
+class ConflictException(TenderForgeException):
+    status_code = 409
+    code = "CONFLICT_ERROR"
+
+
+class ValidationException(TenderForgeException):
+    status_code = 400
+    code = "VALIDATION_ERROR"
+
+
+class EntityNotFoundException(TenderForgeException):
+    status_code = 404
+    code = "ENTITY_NOT_FOUND"
+
+

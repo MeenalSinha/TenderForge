@@ -35,6 +35,13 @@ class Settings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
     CORS_ORIGINS: List[str] = ["*"]
 
+    # Authentication & Security
+    JWT_SECRET_KEY: str = "tenderforge-enterprise-secret-key-change-in-production-2026"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours
+    BCRYPT_ROUNDS: int = 4  # Fast for dev & test suites, configurable to 12 in production
+    AUTH_RATE_LIMIT_PER_MINUTE: int = 30
+
     # Database
     DATABASE_URL: str = "sqlite:///./tenderforge.db"
     DB_ECHO: bool = False
