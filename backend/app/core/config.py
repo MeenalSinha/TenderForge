@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     # Storage
     STORAGE_PROVIDER: str = "local"
     STORAGE_ROOT: str = "./storage"
+    STORAGE_LOCAL_PATH: str = "./storage"
     TEMP_STORAGE_ROOT: str = "./temp_uploads"
     MAX_UPLOAD_SIZE_BYTES: int = 52428800  # 50 MB
 

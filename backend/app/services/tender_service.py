@@ -77,6 +77,24 @@ class TenderService:
             raise TenderNotFoundError(f"Tender with ID '{tender_id}' not found.")
         return tender
 
+    def get_tender(self, db: Session, tender_id: str) -> Tender:
+        """Alias accepting db first."""
+        return self.get_tender_by_id(tender_id, db)
+
+    def list_requirements(
+        self,
+        db: Session,
+        tender_id: str,
+        category: Optional[str] = None,
+        classification: Optional[str] = None,
+    ) -> List[TenderRequirement]:
+        q = db.query(TenderRequirement).filter(TenderRequirement.tender_id == tender_id)
+        if category:
+            q = q.filter(TenderRequirement.category == category)
+        if classification:
+            q = q.filter(TenderRequirement.classification == classification)
+        return q.order_by(TenderRequirement.created_at.asc()).all()
+
     def list_tenders(
         self,
         db: Session,

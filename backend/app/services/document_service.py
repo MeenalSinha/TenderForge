@@ -161,6 +161,39 @@ class DocumentService:
         doc = self.processing_service.process_document(doc, db)
         return doc
 
+    def register_document(
+        self,
+        db: Session,
+        workspace_id: str,
+        filename: str,
+        content: bytes,
+        document_category: str = "tender_notice",
+        content_type: str = "application/octet-stream",
+    ) -> Document:
+        """Convenience method matching parameter styles."""
+        ext = Path(filename).suffix.lower()
+        mime_map = {
+            ".pdf": "application/pdf",
+            ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ".txt": "text/plain",
+            ".csv": "text/csv",
+            ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        }
+        mime = mime_map.get(ext, content_type)
+        return self.upload_and_register_document(
+            file_bytes=content,
+            original_filename=filename,
+            content_type=mime,
+            workspace_id=workspace_id,
+            category=document_category,
+            db=db,
+        )
+
+    def get_extracted_content(self, db: Session, document_id: str) -> List[ExtractedContent]:
+        return db.query(ExtractedContent).filter(
+            ExtractedContent.document_id == document_id
+        ).order_by(ExtractedContent.chunk_index.asc()).all()
+
     def get_document_by_id(self, document_id: str, db: Session) -> Document:
         doc = db.query(Document).filter(Document.id == document_id).first()
         if not doc:

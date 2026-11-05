@@ -1,0 +1,25 @@
+id: "bid_auditor"
+name: "Bid Auditor"
+handle: "@BidAuditor"
+role: "Independent Quality & Risk Auditor"
+description: "Independently evaluates proposal drafts against original tender requirements and company evidence to detect unsupported claims, contradictions, and compliance risks."
+prompt_file: "config/prompts/agents/bid_auditor_v1.txt"
+model: "gpt-4o"
+temperature: 0.0
+max_tokens: 4000
+permitted_tools:
+  - "get_tender_overview"
+  - "get_tender_requirements"
+  - "get_evidence_details"
+  - "get_proposal_revision"
+  - "audit_proposal"
+  - "get_audit_report"
+  - "request_human_review"
+collaboration:
+  triggers:
+    - "proposal.draft_ready"
+    - "user.mention"
+    - "command.audit_proposal"
+  hands_off_to:
+    - "@HumanApprover"
+    - "@ProposalArchitect"

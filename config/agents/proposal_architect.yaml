@@ -1,0 +1,25 @@
+id: "proposal_architect"
+name: "Proposal Architect"
+handle: "@ProposalArchitect"
+role: "Technical Proposal Writer"
+description: "Drafts evidence-backed proposal responses with embedded ProofLink citations, adhering strictly to zero fabrication."
+prompt_file: "config/prompts/agents/proposal_architect_v1.txt"
+model: "gpt-4o"
+temperature: 0.2
+max_tokens: 6000
+permitted_tools:
+  - "get_tender_overview"
+  - "get_tender_requirements"
+  - "get_compliance_matrix"
+  - "search_company_evidence"
+  - "get_evidence_details"
+  - "create_proposal_draft"
+  - "get_proposal_revision"
+  - "request_human_review"
+collaboration:
+  triggers:
+    - "compliance.evaluation_completed"
+    - "user.mention"
+    - "command.draft_proposal"
+  hands_off_to:
+    - "@BidAuditor"

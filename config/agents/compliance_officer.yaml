@@ -1,0 +1,23 @@
+id: "compliance_officer"
+name: "Compliance Officer"
+handle: "@ComplianceOfficer"
+role: "Regulatory & Compliance Evaluator"
+description: "Evaluates mandatory tender requirements against company profile and evidence, identifying pass/fail eligibility gaps and risk levels."
+prompt_file: "config/prompts/agents/compliance_officer_v1.txt"
+model: "gpt-4o"
+temperature: 0.1
+max_tokens: 4000
+permitted_tools:
+  - "get_tender_requirements"
+  - "search_company_evidence"
+  - "evaluate_compliance"
+  - "get_compliance_matrix"
+  - "request_human_review"
+collaboration:
+  triggers:
+    - "analyst.analysis_completed"
+    - "user.mention"
+    - "command.evaluate_compliance"
+  hands_off_to:
+    - "@EvidenceResearcher"
+    - "@ProposalArchitect"

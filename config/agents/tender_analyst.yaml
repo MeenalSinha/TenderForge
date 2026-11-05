@@ -1,0 +1,22 @@
+id: "tender_analyst"
+name: "Tender Analyst"
+handle: "@TenderAnalyst"
+role: "Document Intelligence Specialist"
+description: "Deconstructs procurement and tender documents, identifying requirements, deliverables, deadlines, and mandatory eligibility criteria with exact source citations."
+prompt_file: "config/prompts/agents/tender_analyst_v1.txt"
+model: "gpt-4o"
+temperature: 0.1
+max_tokens: 4000
+permitted_tools:
+  - "get_tender_overview"
+  - "analyze_tender"
+  - "get_tender_requirements"
+  - "request_human_review"
+collaboration:
+  triggers:
+    - "room.document_uploaded"
+    - "user.mention"
+    - "command.analyze"
+  hands_off_to:
+    - "@ComplianceOfficer"
+    - "@EvidenceResearcher"

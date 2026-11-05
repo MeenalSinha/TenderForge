@@ -10,7 +10,17 @@ from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from backend.app.api.routes import documents_router, health_router, tenders_router
+from backend.app.api.routes import (
+    compliance_router,
+    documents_router,
+    evidence_router,
+    health_router,
+    prooflink_router,
+    proposals_router,
+    switch_router,
+    tenders_router,
+    workflow_router,
+)
 from backend.app.api.schemas.common import ErrorDetail, ResponseEnvelope
 from backend.app.core.config import settings
 from backend.app.core.exceptions import TenderForgeException
@@ -132,6 +142,12 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(documents_router, prefix=settings.API_V1_PREFIX)
     app.include_router(tenders_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(evidence_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(prooflink_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(compliance_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(proposals_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(switch_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(workflow_router, prefix=settings.API_V1_PREFIX)
 
     return app
 

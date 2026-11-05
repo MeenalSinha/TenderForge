@@ -40,6 +40,8 @@ class Organization(Base):
     created_at = Column(DateTime, default=utcnow, nullable=False)
 
     workspaces = relationship("Workspace", back_populates="organization", cascade="all, delete-orphan")
+    profile = relationship("OrganizationProfile", uselist=False, back_populates="organization", cascade="all, delete-orphan")
+    evidence = relationship("CompanyEvidence", back_populates="organization", cascade="all, delete-orphan")
 
 
 class Workspace(Base):
@@ -82,6 +84,7 @@ class Document(Base):
     extracted_contents = relationship("ExtractedContent", back_populates="document", cascade="all, delete-orphan")
     tender_links = relationship("TenderDocument", back_populates="document", cascade="all, delete-orphan")
     requirements = relationship("TenderRequirement", back_populates="source_document")
+    evidence_records = relationship("CompanyEvidence", back_populates="document")
 
     __table_args__ = (
         Index("ix_documents_workspace_status", "workspace_id", "processing_status"),
@@ -158,6 +161,12 @@ class Tender(Base):
     document_links = relationship("TenderDocument", back_populates="tender", cascade="all, delete-orphan")
     requirements = relationship("TenderRequirement", back_populates="tender", cascade="all, delete-orphan")
     extraction_results = relationship("ExtractionResult", back_populates="tender", cascade="all, delete-orphan")
+    compliance_matrices = relationship("ComplianceMatrix", back_populates="tender", cascade="all, delete-orphan")
+    proposals = relationship("Proposal", back_populates="tender", cascade="all, delete-orphan")
+    bid_audits = relationship("BidAudit", back_populates="tender", cascade="all, delete-orphan")
+    human_approvals = relationship("HumanApproval", back_populates="tender", cascade="all, delete-orphan")
+    switch_rooms = relationship("SwitchRoom", back_populates="tender", cascade="all, delete-orphan")
+    workflow_state = relationship("WorkflowState", uselist=False, back_populates="tender", cascade="all, delete-orphan")
 
 
 class TenderDocument(Base):
@@ -193,6 +202,7 @@ class TenderRequirement(Base):
 
     tender = relationship("Tender", back_populates="requirements")
     source_document = relationship("Document", back_populates="requirements")
+    evidence_links = relationship("EvidenceRequirementLink", back_populates="requirement", cascade="all, delete-orphan")
 
     __table_args__ = (
         Index("ix_requirements_tender_cat", "tender_id", "category"),
@@ -214,4 +224,215 @@ class ExtractionResult(Base):
     execution_timestamp = Column(DateTime, default=utcnow, nullable=False)
 
     tender = relationship("Tender", back_populates="extraction_results")
+
+
+# ---------------------------------------------------------------------------
+# Phase 2 Models: Organization Evidence, ProofLink, Compliance, Proposals,
+# Audits, Human Approvals, Switch Rooms, and Workflow State
+# ---------------------------------------------------------------------------
+
+class OrganizationProfile(Base):
+    __tablename__ = "organization_profiles"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    organization_id = Column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), unique=True, nullable=False)
+    legal_name = Column(String(255), nullable=False)
+    trade_name = Column(String(255), nullable=True)
+    registration_number = Column(String(128), nullable=False)
+    tax_id = Column(String(128), nullable=False)
+    jurisdiction = Column(String(128), default="United States", nullable=False)
+    incorporation_date = Column(DateTime, nullable=True)
+    headquarters_address = Column(String(512), nullable=True)
+    primary_contact_name = Column(String(255), nullable=True)
+    primary_contact_email = Column(String(255), nullable=True)
+    financial_metrics = Column(JSON, nullable=True)  # e.g. {"turnover_fy23": 2500000, "turnover_fy24": 3100000, "turnover_fy25": 4200000}
+    core_capabilities = Column(JSON, nullable=True)  # list of strings
+    certifications = Column(JSON, nullable=True)  # list of strings e.g. ["ISO 9001:2015", "ISO 27001"]
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    organization = relationship("Organization", back_populates="profile")
+
+
+class CompanyEvidence(Base):
+    __tablename__ = "company_evidence"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    organization_id = Column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    document_id = Column(String(36), ForeignKey("documents.id", ondelete="SET NULL"), nullable=True)
+    evidence_type = Column(String(64), nullable=False)  # financial_audit, certification, past_project, statutory_registration, policy, cv_personnel, other
+    title = Column(String(255), nullable=False)
+    issuer = Column(String(255), nullable=True)
+    issue_date = Column(DateTime, nullable=True)
+    expiry_date = Column(DateTime, nullable=True)
+    reference_number = Column(String(128), nullable=True)
+    status = Column(String(32), default="valid", nullable=False)  # valid, expired, pending_verification, revoked
+    summary = Column(Text, nullable=True)
+    extracted_data = Column(JSON, nullable=True)
+    tags = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    organization = relationship("Organization", back_populates="evidence")
+    document = relationship("Document", back_populates="evidence_records")
+    requirement_links = relationship("EvidenceRequirementLink", back_populates="evidence", cascade="all, delete-orphan")
+
+    __table_args__ = (
+        Index("ix_company_evidence_org_type", "organization_id", "evidence_type"),
+    )
+
+
+class EvidenceRequirementLink(Base):
+    __tablename__ = "evidence_requirement_links"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    requirement_id = Column(String(36), ForeignKey("tender_requirements.id", ondelete="CASCADE"), nullable=False)
+    evidence_id = Column(String(36), ForeignKey("company_evidence.id", ondelete="CASCADE"), nullable=False)
+    match_status = Column(String(32), default="Pending", nullable=False)  # Verified, Human Confirmed, Pending, Unsupported, Contradicted
+    confidence_score = Column(Float, default=1.0, nullable=False)
+    source_excerpt = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
+    verified_by_user_id = Column(String(128), nullable=True)
+    verified_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+    requirement = relationship("TenderRequirement", back_populates="evidence_links")
+    evidence = relationship("CompanyEvidence", back_populates="requirement_links")
+
+    __table_args__ = (
+        Index("ix_evidence_req_link", "requirement_id", "evidence_id"),
+    )
+
+
+class ComplianceMatrix(Base):
+    __tablename__ = "compliance_matrices"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    tender_id = Column(String(36), ForeignKey("tenders.id", ondelete="CASCADE"), nullable=False)
+    overall_status = Column(String(32), default="Pending", nullable=False)  # Compliant, Partially Compliant, Non-Compliant, Clarification Required
+    overall_risk_level = Column(String(32), default="Medium", nullable=False)  # Low, Medium, High, Critical
+    evaluated_by_agent = Column(String(128), default="ComplianceOfficer", nullable=False)
+    summary = Column(Text, nullable=False)
+    items = Column(JSON, nullable=False)  # list of evaluated requirements with status, risk, notes
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    tender = relationship("Tender", back_populates="compliance_matrices")
+
+
+class Proposal(Base):
+    __tablename__ = "proposals"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    tender_id = Column(String(36), ForeignKey("tenders.id", ondelete="CASCADE"), nullable=False)
+    title = Column(String(512), nullable=False)
+    current_version = Column(Integer, default=1, nullable=False)
+    status = Column(String(32), default="drafting", nullable=False)  # drafting, auditing, pending_human_review, approved, rejected
+    executive_summary = Column(Text, nullable=True)
+    docx_file_path = Column(String(512), nullable=True)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    tender = relationship("Tender", back_populates="proposals")
+    sections = relationship("ProposalSection", back_populates="proposal", cascade="all, delete-orphan")
+    revisions = relationship("ProposalRevision", back_populates="proposal", cascade="all, delete-orphan")
+    audits = relationship("BidAudit", back_populates="proposal", cascade="all, delete-orphan")
+
+
+class ProposalSection(Base):
+    __tablename__ = "proposal_sections"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    proposal_id = Column(String(36), ForeignKey("proposals.id", ondelete="CASCADE"), nullable=False)
+    section_number = Column(String(32), nullable=False)
+    title = Column(String(255), nullable=False)
+    content = Column(Text, nullable=False)
+    claims = Column(JSON, nullable=True)  # list of factual claims with text, status, prooflink_citation
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    proposal = relationship("Proposal", back_populates="sections")
+
+
+class ProposalRevision(Base):
+    __tablename__ = "proposal_revisions"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    proposal_id = Column(String(36), ForeignKey("proposals.id", ondelete="CASCADE"), nullable=False)
+    version_number = Column(Integer, nullable=False)
+    author_type = Column(String(32), default="agent", nullable=False)  # agent, human
+    author_id = Column(String(128), nullable=False)
+    change_summary = Column(String(512), nullable=False)
+    snapshot = Column(JSON, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+    proposal = relationship("Proposal", back_populates="revisions")
+
+
+class BidAudit(Base):
+    __tablename__ = "bid_audits"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    proposal_id = Column(String(36), ForeignKey("proposals.id", ondelete="CASCADE"), nullable=False)
+    tender_id = Column(String(36), ForeignKey("tenders.id", ondelete="CASCADE"), nullable=False)
+    auditor_type = Column(String(32), default="agent", nullable=False)  # agent, human
+    auditor_id = Column(String(128), default="BidAuditor", nullable=False)
+    readiness_score = Column(Float, default=0.0, nullable=False)  # 0.0 to 100.0
+    verdict = Column(String(64), nullable=False)  # Ready for Submission, Conditional Approval Required, Submission Blocked - High Risk
+    total_claims = Column(Integer, default=0, nullable=False)
+    verified_claims = Column(Integer, default=0, nullable=False)
+    unsupported_claims = Column(Integer, default=0, nullable=False)
+    contradicted_claims = Column(Integer, default=0, nullable=False)
+    findings = Column(JSON, nullable=False)  # list of findings with severity, category, description, recommendation
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+    proposal = relationship("Proposal", back_populates="audits")
+    tender = relationship("Tender", back_populates="bid_audits")
+
+
+class HumanApproval(Base):
+    __tablename__ = "human_approvals"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    tender_id = Column(String(36), ForeignKey("tenders.id", ondelete="CASCADE"), nullable=False)
+    proposal_id = Column(String(36), ForeignKey("proposals.id", ondelete="CASCADE"), nullable=True)
+    audit_id = Column(String(36), ForeignKey("bid_audits.id", ondelete="CASCADE"), nullable=True)
+    decision = Column(String(32), nullable=False)  # Approved, Rejected, Changes Requested
+    user_id = Column(String(128), nullable=False)
+    user_name = Column(String(255), nullable=False)
+    user_role = Column(String(128), nullable=False)
+    comments = Column(Text, nullable=False)
+    signature_hash = Column(String(64), nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+    tender = relationship("Tender", back_populates="human_approvals")
+
+
+class SwitchRoom(Base):
+    __tablename__ = "switch_rooms"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    tender_id = Column(String(36), ForeignKey("tenders.id", ondelete="CASCADE"), nullable=False)
+    room_name = Column(String(255), nullable=False)
+    channel_id = Column(String(128), nullable=False)
+    channel_type = Column(String(32), default="mattermost", nullable=False)  # mattermost, slack, teams, web_mock
+    status = Column(String(32), default="active", nullable=False)  # active, archived
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    tender = relationship("Tender", back_populates="switch_rooms")
+
+
+class WorkflowState(Base):
+    __tablename__ = "workflow_states"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    tender_id = Column(String(36), ForeignKey("tenders.id", ondelete="CASCADE"), unique=True, nullable=False)
+    current_stage = Column(String(64), default="WORKSPACE_INITIALIZED", nullable=False)
+    stage_history = Column(JSON, default=list, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    tender = relationship("Tender", back_populates="workflow_state")
+
 

@@ -46,10 +46,14 @@ class TenderIntelligenceService:
     async def analyze_tender(
         self,
         tender_id: str,
-        db: Session,
+        db: Session = None,
         force_reanalysis: bool = False,
     ) -> Dict[str, Any]:
         """Run intelligence extraction against linked documents."""
+        # Support either argument order (db, tender_id) or (tender_id, db)
+        if isinstance(tender_id, Session):
+            db, tender_id = tender_id, db
+
         tender = db.query(Tender).filter(Tender.id == tender_id).first()
         if not tender:
             raise TenderNotFoundError(f"Tender '{tender_id}' not found.")
@@ -203,4 +207,16 @@ class TenderIntelligenceService:
                 for r in created_reqs
             ],
         }
+
+    def analyze_tender_sync(
+        self,
+        tender_id: str,
+        db: Session = None,
+        force_reanalysis: bool = False,
+    ) -> Dict[str, Any]:
+        """Synchronous execution wrapper for analyze_tender."""
+        import asyncio
+        if isinstance(tender_id, Session):
+            db, tender_id = tender_id, db
+        return asyncio.run(self.analyze_tender(tender_id, db, force_reanalysis))
 

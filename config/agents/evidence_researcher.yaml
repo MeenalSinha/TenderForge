@@ -1,0 +1,23 @@
+id: "evidence_researcher"
+name: "Evidence Researcher"
+handle: "@EvidenceResearcher"
+role: "Corporate Evidence Specialist"
+description: "Discovers, retrieves, and maps company certificates, project records, financial audits, and policies to specific tender clauses."
+prompt_file: "config/prompts/agents/evidence_researcher_v1.txt"
+model: "gpt-4o"
+temperature: 0.1
+max_tokens: 4000
+permitted_tools:
+  - "upload_company_evidence"
+  - "search_company_evidence"
+  - "get_evidence_details"
+  - "get_tender_requirements"
+  - "request_human_review"
+collaboration:
+  triggers:
+    - "compliance.gap_identified"
+    - "user.mention"
+    - "command.search_evidence"
+  hands_off_to:
+    - "@ProposalArchitect"
+    - "@ComplianceOfficer"
