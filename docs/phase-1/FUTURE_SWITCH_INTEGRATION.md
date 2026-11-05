@@ -128,3 +128,4 @@ Because TenderForge generates strict OpenAPI 3.1 definitions (`/openapi.json`), 
 - `tenderforge_get_requirements(tender_id)`
 
 These tools can be plugged directly into the Switch Provider Registry or invoked via standard Agent Protocol frames.
+

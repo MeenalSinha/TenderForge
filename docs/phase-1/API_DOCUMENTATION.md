@@ -211,3 +211,4 @@ API Version Prefix: `/api/v1`
 ### `GET /api/v1/tenders/{tender_id}/analysis`
 - **Description**: Retrieve structured requirements grouped by category (`eligibility`, `technical`, `financial`, `submission`) with auditable ProofLink references.
 - **Status**: `200 OK`
+

@@ -57,3 +57,4 @@ All non-negotiable engineering principles have been upheld:
 ### 2.8 Switch Ecosystem Integration Contracts (`backend/app/integrations/switch/`)
 - Versioned typed schemas for Switch rooms, agents, citations, and events (`contracts/schemas.py`).
 - Abstract bridge interface (`interfaces/agent_bridge.py`) for future Switch Room connectors.
+

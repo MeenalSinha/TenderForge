@@ -53,3 +53,4 @@ This security audit reviews the defensive mechanisms implemented in TenderForge 
 - **Implementation**:
   - ProofLink Foundation: Every requirement stored in `tender_requirements` requires `source_page`, `source_offset`, and a verbatim quotation (`source_excerpt`).
   - Graceful Degradation: If an AI provider is not configured, the system explicitly returns `ai_configuration_required` and records 0 requirements. It **never fabricates artificial results**.
+

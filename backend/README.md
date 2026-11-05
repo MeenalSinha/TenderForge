@@ -20,3 +20,4 @@ python -m alembic -c backend/alembic.ini upgrade head
 - Swagger UI: `http://localhost:8000/docs`
 - ReDoc: `http://localhost:8000/redoc`
 - OpenAPI JSON: `http://localhost:8000/openapi.json`
+

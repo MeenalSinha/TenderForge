@@ -91,3 +91,4 @@ The automated test suite was executed against the Phase 1 backend codebase using
 | `backend/app/api/routes/documents.py` | 32 | 0 | 100% |
 | `backend/app/api/routes/tenders.py` | 35 | 0 | 100% |
 | **TOTAL** | **1,518** | **222** | **85%** |
+

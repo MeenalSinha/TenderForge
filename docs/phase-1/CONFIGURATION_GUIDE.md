@@ -116,3 +116,4 @@ AI_API_KEY=your-gemini-key
 AI_PROVIDER=none
 ```
 Document ingestion, storage, parsing, normalization, and segmentation will continue to run completely. The `/analyze` endpoint will cleanly report `ai_configuration_required` without fabricating false claims.
+

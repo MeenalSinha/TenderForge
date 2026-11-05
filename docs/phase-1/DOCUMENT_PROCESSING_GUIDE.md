@@ -86,3 +86,4 @@ parser_registry.register_parser(".custom", MyCustomParser())
 ```
 3. Add the extension to `config/document_processing.yaml`.
 No business services or API routes need to be modified.
+
