@@ -1,0 +1,82 @@
+# ==============================================================================
+# TenderForge Bid/No-Bid Decision Intelligence Configuration
+# ==============================================================================
+bid_evaluation:
+  scoring_algorithm: "weighted_multi_dimensional_with_hard_gates"
+  advisory_notice: "All recommendations are strictly advisory. Final bid decision requires authorized human executive approval."
+
+  # Non-compensable eligibility gates: If ANY mandatory gate fails, overall
+  # recommendation is strictly overridden to NO-BID RECOMMENDED or BID WITH CONDITIONS.
+  eligibility_gates:
+    mandatory_criteria:
+      - "statutory_incorporation"
+      - "minimum_turnover"
+      - "mandatory_certifications"
+      - "non_blacklisting"
+      - "security_clearance"
+    strict_rejection_on_fail: true
+
+  # Configurable dimensions with baseline weights (must sum to 1.0 or normalized)
+  dimensions:
+    eligibility:
+      label: "Mandatory Eligibility"
+      weight: 0.25
+      minimum_threshold: 100.0  # Pass/Fail gate
+      is_gate: true
+      description: "Legal, statutory, and minimum mandatory tender qualification criteria."
+
+    technical_capability:
+      label: "Technical Capability & Solution Fit"
+      weight: 0.20
+      minimum_threshold: 70.0
+      is_gate: false
+      description: "Alignment between tender technical specifications and organization competencies."
+
+    past_performance:
+      label: "Past Performance & Track Record"
+      weight: 0.15
+      minimum_threshold: 65.0
+      is_gate: false
+      description: "Proven delivery history in similar scale, complexity, and client sector."
+
+    financial_capacity:
+      label: "Financial Standing & Working Capital"
+      weight: 0.15
+      minimum_threshold: 70.0
+      is_gate: false
+      description: "Annual turnover, liquidity ratio, balance sheet strength, and bank guarantees."
+
+    resource_availability:
+      label: "Resource & Staffing Availability"
+      weight: 0.10
+      minimum_threshold: 60.0
+      is_gate: false
+      description: "Availability of certified key personnel, engineering talent, and equipment."
+
+    timeline_feasibility:
+      label: "Timeline & Delivery Feasibility"
+      weight: 0.10
+      minimum_threshold: 60.0
+      is_gate: false
+      description: "Feasibility of proposed project milestones and completion date."
+
+    strategic_alignment:
+      label: "Strategic Alignment & Margin Potential"
+      weight: 0.05
+      minimum_threshold: 50.0
+      is_gate: false
+      description: "Target account acquisition, repeatable IP generation, and profitability."
+
+  # Recommendation Thresholds
+  recommendation_thresholds:
+    bid:
+      min_overall_score: 75.0
+      require_all_gates: true
+      min_dimension_score: 55.0
+    bid_with_conditions:
+      min_overall_score: 60.0
+      require_all_gates: true  # or non-fatal condition waiver required
+      min_dimension_score: 40.0
+    no_bid:
+      score_below: 60.0
+      or_any_gate_failed: true

@@ -160,3 +160,14 @@ class SwitchAgentBridge(BaseSwitchAgentBridge):
 
 # Global Switch Bridge singleton
 switch_bridge = SwitchAgentBridge()
+
+
+def get_switch_bridge() -> SwitchAgentBridge:
+    return switch_bridge
+
+
+def _post_msg(self, channel_id: str, sender_agent_id: str, text: str) -> bool:
+    self._message_history.append({"channel_id": channel_id, "sender_id": sender_agent_id, "text": text})
+    return True
+
+SwitchAgentBridge.post_message = _post_msg

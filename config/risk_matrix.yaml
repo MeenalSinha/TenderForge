@@ -1,0 +1,86 @@
+# ==============================================================================
+# TenderForge Risk Assessment Matrix Configuration
+# ==============================================================================
+risk_matrix:
+  version: "1.0.0"
+  scoring_model: "likelihood_x_impact"
+
+  likelihood_levels:
+    1:
+      label: "Rare"
+      probability_range: "< 10%"
+      description: "Highly improbable under normal project execution circumstances."
+    2:
+      label: "Unlikely"
+      probability_range: "10% - 25%"
+      description: "Low probability but known to have occurred in industry."
+    3:
+      label: "Possible"
+      probability_range: "25% - 50%"
+      description: "Reasonable likelihood of occurrence during tender or contract."
+    4:
+      label: "Likely"
+      probability_range: "50% - 75%"
+      description: "Probable occurrence unless proactive mitigations are taken."
+    5:
+      label: "Almost Certain"
+      probability_range: "> 75%"
+      description: "Expected to occur; mandatory mitigations and contingencies required."
+
+  impact_levels:
+    1:
+      label: "Negligible"
+      financial_impact: "< $5,000"
+      schedule_impact: "< 1 week"
+      compliance_impact: "Minor administrative remark"
+    2:
+      label: "Minor"
+      financial_impact: "$5,000 - $25,000"
+      schedule_impact: "1 - 3 weeks"
+      compliance_impact: "Request for clarification"
+    3:
+      label: "Moderate"
+      financial_impact: "$25,000 - $100,000"
+      schedule_impact: "1 - 2 months"
+      compliance_impact: "Scoring penalty or technical condition"
+    4:
+      label: "Major"
+      financial_impact: "$100,000 - $500,000"
+      schedule_impact: "2 - 4 months"
+      compliance_impact: "Risk of bid disqualification"
+    5:
+      label: "Catastrophic"
+      financial_impact: "> $500,000"
+      schedule_impact: "> 4 months or contract termination"
+      compliance_impact: "Direct disqualification, forfeiture of EMD, or blacklisting"
+
+  severity_bands:
+    low:
+      min_score: 1
+      max_score: 6
+      color: "green"
+      action_required: "Monitor and manage through standard project management practices."
+    medium:
+      min_score: 7
+      max_score: 14
+      color: "amber"
+      action_required: "Specific mitigation plan assigned with tracked owner and contingency."
+    high:
+      min_score: 15
+      max_score: 25
+      color: "red"
+      action_required: "Executive review required. Bid submission blocked without approved mitigation."
+
+  categories:
+    - id: "Compliance"
+      description: "Eligibility, statutory certifications, turnover hurdles, mandatory covenants."
+    - id: "Evidence"
+      description: "Missing, expired, ambiguous, or contradicted documentation."
+    - id: "Financial"
+      description: "Cash flow, margin erosion, liquidated damages, currency fluctuation, bank guarantees."
+    - id: "Timeline"
+      description: "Aggressive delivery dates, milestone penalties, long lead-time hardware."
+    - id: "Legal_Commercial"
+      description: "Uncapped liability, indemnification, intellectual property assignment, dispute jurisdiction."
+    - id: "Technical"
+      description: "Unproven architecture, SLA stringency, interoperability constraints, key personnel shortage."

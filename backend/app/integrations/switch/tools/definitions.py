@@ -225,6 +225,107 @@ TOOLS_REGISTRY: List[Dict[str, Any]] = [
             "required": ["tender_id", "proposal_id"],
         },
     },
+    {
+        "name": "evaluate_bid_decision",
+        "description": "Execute multi-dimensional evaluation and produce an advisory Bid/No-Bid recommendation.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "tender_id": {"type": "string", "description": "Tender ID"},
+            },
+            "required": ["tender_id"],
+        },
+    },
+    {
+        "name": "audit_evidence_freshness",
+        "description": "Audit evidence records for expiration and approaching obsolescence.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "organization_id": {"type": "string", "description": "Organization ID"},
+            },
+            "required": ["organization_id"],
+        },
+    },
+    {
+        "name": "detect_evidence_contradictions",
+        "description": "Analyze company evidence and profile to detect contradictory factual claims.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "organization_id": {"type": "string", "description": "Organization ID"},
+            },
+            "required": ["organization_id"],
+        },
+    },
+    {
+        "name": "manage_financial_proposal",
+        "description": "Create and calculate itemized commercial proposal with exact Decimal precision.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "tender_id": {"type": "string", "description": "Tender ID"},
+                "title": {"type": "string", "description": "Pricing Schedule Title"},
+                "initial_items": {"type": "array", "items": {"type": "object"}, "description": "Initial BOQ line items"},
+            },
+            "required": ["tender_id"],
+        },
+    },
+    {
+        "name": "generate_pricing_scenarios",
+        "description": "Generate Base Case, Conservative, and Aggressive commercial pricing scenarios.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "financial_proposal_id": {"type": "string", "description": "Financial Proposal ID"},
+            },
+            "required": ["financial_proposal_id"],
+        },
+    },
+    {
+        "name": "harvest_bid_risks",
+        "description": "Centralize and score risks across compliance, evidence, commercials, and deadlines.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "tender_id": {"type": "string", "description": "Tender ID"},
+            },
+            "required": ["tender_id"],
+        },
+    },
+    {
+        "name": "optimize_proposal_coverage",
+        "description": "Generate Before-and-After improvement recommendations against tender evaluation criteria.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "proposal_id": {"type": "string", "description": "Proposal ID"},
+            },
+            "required": ["proposal_id"],
+        },
+    },
+    {
+        "name": "validate_proposal_quality",
+        "description": "Audit proposal document hygiene: placeholders, citations, formatting score.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "proposal_id": {"type": "string", "description": "Proposal ID"},
+            },
+            "required": ["proposal_id"],
+        },
+    },
+    {
+        "name": "get_portfolio_summary",
+        "description": "Retrieve executive portfolio overview, pipeline stage counts, and win rate.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "workspace_id": {"type": "string", "description": "Workspace ID"},
+            },
+            "required": ["workspace_id"],
+        },
+    },
 ]
 
 

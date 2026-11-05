@@ -1,5 +1,5 @@
 # ==============================================================================
-# TenderForge Application Configuration
+# TenderForge Application Configuration (Template)
 # ==============================================================================
 application:
   name: "TenderForge"
@@ -29,3 +29,31 @@ logging:
     - "secret"
     - "authorization"
 
+bid_intelligence:
+  config_file: "config/bid_evaluation.yaml"
+  auto_evaluate_on_compliance_completion: true
+  default_recommendation_grace_margin: 2.0
+
+financial_workspace:
+  config_file: "config/financial_policies.yaml"
+  enforce_strict_decimal_math: true
+  default_export_format: "xlsx"
+
+risk_management:
+  config_file: "config/risk_matrix.yaml"
+  block_submission_on_high_unmitigated_risk: true
+
+deadlines:
+  default_timezone: "UTC"
+  default_reminder_hours: [168, 72, 24, 2]
+  send_switch_reminders: true
+
+rbac:
+  enabled: true
+  enforce_workspace_roles: true
+  roles:
+    - "Viewer"
+    - "Author"
+    - "Reviewer"
+    - "Approver"
+    - "Admin"

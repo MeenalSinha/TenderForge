@@ -42,6 +42,7 @@ class Organization(Base):
     workspaces = relationship("Workspace", back_populates="organization", cascade="all, delete-orphan")
     profile = relationship("OrganizationProfile", uselist=False, back_populates="organization", cascade="all, delete-orphan")
     evidence = relationship("CompanyEvidence", back_populates="organization", cascade="all, delete-orphan")
+    contradictions = relationship("EvidenceContradiction", back_populates="organization", cascade="all, delete-orphan")
 
 
 class Workspace(Base):
@@ -56,6 +57,7 @@ class Workspace(Base):
     organization = relationship("Organization", back_populates="workspaces")
     documents = relationship("Document", back_populates="workspace", cascade="all, delete-orphan")
     tenders = relationship("Tender", back_populates="workspace", cascade="all, delete-orphan")
+    user_roles = relationship("UserRole", back_populates="workspace", cascade="all, delete-orphan")
 
 
 class Document(Base):
@@ -167,6 +169,12 @@ class Tender(Base):
     human_approvals = relationship("HumanApproval", back_populates="tender", cascade="all, delete-orphan")
     switch_rooms = relationship("SwitchRoom", back_populates="tender", cascade="all, delete-orphan")
     workflow_state = relationship("WorkflowState", uselist=False, back_populates="tender", cascade="all, delete-orphan")
+    bid_evaluations = relationship("BidEvaluation", back_populates="tender", cascade="all, delete-orphan")
+    evaluation_criteria = relationship("EvaluationCriteria", back_populates="tender", cascade="all, delete-orphan")
+    financial_proposals = relationship("FinancialProposal", back_populates="tender", cascade="all, delete-orphan")
+    bid_risks = relationship("BidRisk", back_populates="tender", cascade="all, delete-orphan")
+    deadlines = relationship("TenderDeadline", back_populates="tender", cascade="all, delete-orphan")
+    claim_lineages = relationship("ClaimLineage", back_populates="tender", cascade="all, delete-orphan")
 
 
 class TenderDocument(Base):
@@ -203,6 +211,7 @@ class TenderRequirement(Base):
     tender = relationship("Tender", back_populates="requirements")
     source_document = relationship("Document", back_populates="requirements")
     evidence_links = relationship("EvidenceRequirementLink", back_populates="requirement", cascade="all, delete-orphan")
+    claim_lineages = relationship("ClaimLineage", back_populates="requirement")
 
     __table_args__ = (
         Index("ix_requirements_tender_cat", "tender_id", "category"),
@@ -276,6 +285,7 @@ class CompanyEvidence(Base):
     organization = relationship("Organization", back_populates="evidence")
     document = relationship("Document", back_populates="evidence_records")
     requirement_links = relationship("EvidenceRequirementLink", back_populates="evidence", cascade="all, delete-orphan")
+    claim_lineages = relationship("ClaimLineage", back_populates="evidence")
 
     __table_args__ = (
         Index("ix_company_evidence_org_type", "organization_id", "evidence_type"),
@@ -337,6 +347,10 @@ class Proposal(Base):
     sections = relationship("ProposalSection", back_populates="proposal", cascade="all, delete-orphan")
     revisions = relationship("ProposalRevision", back_populates="proposal", cascade="all, delete-orphan")
     audits = relationship("BidAudit", back_populates="proposal", cascade="all, delete-orphan")
+    optimizations = relationship("ProposalOptimization", back_populates="proposal", cascade="all, delete-orphan")
+    quality_checks = relationship("ProposalQualityCheck", back_populates="proposal", cascade="all, delete-orphan")
+    claim_lineages = relationship("ClaimLineage", back_populates="proposal", cascade="all, delete-orphan")
+    financial_proposals = relationship("FinancialProposal", back_populates="proposal")
 
 
 class ProposalSection(Base):
@@ -434,5 +448,281 @@ class WorkflowState(Base):
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
 
     tender = relationship("Tender", back_populates="workflow_state")
+
+
+# ---------------------------------------------------------------------------
+# Phase 3 Models: Bid Intelligence, Advanced ProofLink, Financial Workspace,
+# Evaluation Criteria, Proposal Optimization, Bid Risks, Deadlines, and RBAC
+# ---------------------------------------------------------------------------
+
+class BidEvaluation(Base):
+    __tablename__ = "bid_evaluations"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    tender_id = Column(String(36), ForeignKey("tenders.id", ondelete="CASCADE"), nullable=False)
+    evaluator_type = Column(String(32), default="agent", nullable=False)  # agent, human
+    evaluator_id = Column(String(128), default="BidIntelligenceEngine", nullable=False)
+    dimensions = Column(JSON, nullable=False)  # dimension scores, weights, reasonings
+    overall_score = Column(Float, default=0.0, nullable=False)  # 0.0 to 100.0
+    eligibility_gates_passed = Column(Boolean, default=True, nullable=False)
+    failed_gates = Column(JSON, default=list, nullable=False)
+    recommendation = Column(String(64), nullable=False)  # BID, BID WITH CONDITIONS, NO-BID RECOMMENDED
+    conditions = Column(JSON, default=list, nullable=False)
+    executive_summary = Column(Text, nullable=False)
+    human_decision = Column(String(32), default="PENDING", nullable=False)  # PENDING, APPROVED_BID, APPROVED_NO_BID, OVERRIDDEN
+    human_decision_by = Column(String(128), nullable=True)
+    human_decision_rationale = Column(Text, nullable=True)
+    human_decision_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    tender = relationship("Tender", back_populates="bid_evaluations")
+
+
+class EvidenceContradiction(Base):
+    __tablename__ = "evidence_contradictions"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    organization_id = Column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    evidence_id_1 = Column(String(36), ForeignKey("company_evidence.id", ondelete="CASCADE"), nullable=False)
+    evidence_id_2 = Column(String(36), ForeignKey("company_evidence.id", ondelete="SET NULL"), nullable=True)
+    claim_field = Column(String(128), nullable=False)
+    value_1 = Column(Text, nullable=False)
+    value_2 = Column(Text, nullable=False)
+    contradiction_severity = Column(String(32), default="High", nullable=False)  # Critical, High, Medium, Low
+    status = Column(String(32), default="Open", nullable=False)  # Open, Investigating, Resolved, Dismissed
+    resolution_notes = Column(Text, nullable=True)
+    resolved_by = Column(String(128), nullable=True)
+    resolved_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    organization = relationship("Organization", back_populates="contradictions")
+    evidence_1 = relationship("CompanyEvidence", foreign_keys=[evidence_id_1])
+    evidence_2 = relationship("CompanyEvidence", foreign_keys=[evidence_id_2])
+
+
+class ClaimLineage(Base):
+    __tablename__ = "claim_lineages"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    tender_id = Column(String(36), ForeignKey("tenders.id", ondelete="CASCADE"), nullable=False)
+    proposal_id = Column(String(36), ForeignKey("proposals.id", ondelete="CASCADE"), nullable=True)
+    requirement_id = Column(String(36), ForeignKey("tender_requirements.id", ondelete="SET NULL"), nullable=True)
+    evidence_id = Column(String(36), ForeignKey("company_evidence.id", ondelete="SET NULL"), nullable=True)
+    section_number = Column(String(32), nullable=True)
+    claim_text = Column(Text, nullable=False)
+    evidence_extract = Column(Text, nullable=False)
+    review_status = Column(String(32), default="unreviewed", nullable=False)  # unreviewed, audited, verified, rejected
+    auditor_verdict = Column(String(64), nullable=True)
+    approval_status = Column(String(32), default="pending", nullable=False)  # pending, approved, invalidated
+    lineage_hash = Column(String(64), nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    tender = relationship("Tender", back_populates="claim_lineages")
+    proposal = relationship("Proposal", back_populates="claim_lineages")
+    requirement = relationship("TenderRequirement", back_populates="claim_lineages")
+    evidence = relationship("CompanyEvidence", back_populates="claim_lineages")
+
+    __table_args__ = (
+        Index("ix_claim_lineage_tender_req", "tender_id", "requirement_id"),
+    )
+
+
+class EvaluationCriteria(Base):
+    __tablename__ = "evaluation_criteria"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    tender_id = Column(String(36), ForeignKey("tenders.id", ondelete="CASCADE"), nullable=False)
+    criterion_code = Column(String(64), nullable=False)
+    title = Column(String(255), nullable=False)
+    category = Column(String(64), nullable=False)  # Technical, Financial, Past Performance, Management, Compliance
+    weight_percentage = Column(Float, default=0.0, nullable=False)
+    max_marks = Column(Float, default=100.0, nullable=False)
+    description = Column(Text, nullable=False)
+    scoring_rules = Column(JSON, default=dict, nullable=False)
+    mandatory = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    tender = relationship("Tender", back_populates="evaluation_criteria")
+    optimizations = relationship("ProposalOptimization", back_populates="criterion", cascade="all, delete-orphan")
+
+
+class ProposalOptimization(Base):
+    __tablename__ = "proposal_optimizations"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    proposal_id = Column(String(36), ForeignKey("proposals.id", ondelete="CASCADE"), nullable=False)
+    criterion_id = Column(String(36), ForeignKey("evaluation_criteria.id", ondelete="SET NULL"), nullable=True)
+    section_number = Column(String(32), nullable=True)
+    coverage_status = Column(String(32), default="Partial", nullable=False)  # Complete, Partial, Missing, Weak
+    gap_analysis = Column(Text, nullable=False)
+    current_score_estimate = Column(Float, default=0.0, nullable=False)
+    potential_score_estimate = Column(Float, default=0.0, nullable=False)
+    before_text = Column(Text, nullable=True)
+    after_text = Column(Text, nullable=True)
+    improvement_rationale = Column(Text, nullable=False)
+    status = Column(String(32), default="Proposed", nullable=False)  # Proposed, Accepted, Rejected, Applied
+    applied_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    proposal = relationship("Proposal", back_populates="optimizations")
+    criterion = relationship("EvaluationCriteria", back_populates="optimizations")
+
+
+class FinancialProposal(Base):
+    __tablename__ = "financial_proposals"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    tender_id = Column(String(36), ForeignKey("tenders.id", ondelete="CASCADE"), nullable=False)
+    proposal_id = Column(String(36), ForeignKey("proposals.id", ondelete="SET NULL"), nullable=True)
+    title = Column(String(255), default="Pricing Schedule", nullable=False)
+    currency = Column(String(8), default="USD", nullable=False)
+    subtotal = Column(String(32), default="0.00", nullable=False)
+    tax_rate_percent = Column(String(16), default="0.00", nullable=False)
+    tax_amount = Column(String(32), default="0.00", nullable=False)
+    contingency_rate_percent = Column(String(16), default="0.00", nullable=False)
+    contingency_amount = Column(String(32), default="0.00", nullable=False)
+    overhead_rate_percent = Column(String(16), default="0.00", nullable=False)
+    overhead_amount = Column(String(32), default="0.00", nullable=False)
+    margin_rate_percent = Column(String(16), default="0.00", nullable=False)
+    margin_amount = Column(String(32), default="0.00", nullable=False)
+    total_price = Column(String(32), default="0.00", nullable=False)
+    status = Column(String(32), default="Draft", nullable=False)  # Draft, In_Review, Approved, Locked
+    validation_errors = Column(JSON, default=list, nullable=True)
+    assumptions = Column(JSON, default=list, nullable=True)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    tender = relationship("Tender", back_populates="financial_proposals")
+    proposal = relationship("Proposal", back_populates="financial_proposals")
+    line_items = relationship("FinancialLineItem", back_populates="financial_proposal", cascade="all, delete-orphan")
+    scenarios = relationship("FinancialScenario", back_populates="financial_proposal", cascade="all, delete-orphan")
+
+
+class FinancialLineItem(Base):
+    __tablename__ = "financial_line_items"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    financial_proposal_id = Column(String(36), ForeignKey("financial_proposals.id", ondelete="CASCADE"), nullable=False)
+    item_code = Column(String(64), nullable=False)
+    description = Column(Text, nullable=False)
+    category = Column(String(64), default="Services", nullable=False)  # Labor, Hardware, Software, Services, Travel, Contingency
+    unit = Column(String(32), default="each", nullable=False)
+    quantity = Column(String(32), default="1.00", nullable=False)
+    unit_rate = Column(String(32), default="0.00", nullable=False)
+    tax_percent = Column(String(16), default="0.00", nullable=False)
+    line_total = Column(String(32), default="0.00", nullable=False)
+    notes = Column(Text, nullable=True)
+    order_index = Column(Integer, default=0, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+    financial_proposal = relationship("FinancialProposal", back_populates="line_items")
+
+
+class FinancialScenario(Base):
+    __tablename__ = "financial_scenarios"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    financial_proposal_id = Column(String(36), ForeignKey("financial_proposals.id", ondelete="CASCADE"), nullable=False)
+    scenario_name = Column(String(64), nullable=False)  # Base Case, Conservative, Aggressive
+    margin_rate_percent = Column(String(16), nullable=False)
+    contingency_rate_percent = Column(String(16), nullable=False)
+    discount_percent = Column(String(16), default="0.00", nullable=False)
+    calculated_total = Column(String(32), nullable=False)
+    summary_metrics = Column(JSON, default=dict, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+    financial_proposal = relationship("FinancialProposal", back_populates="scenarios")
+
+
+class BidRisk(Base):
+    __tablename__ = "bid_risks"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    tender_id = Column(String(36), ForeignKey("tenders.id", ondelete="CASCADE"), nullable=False)
+    title = Column(String(255), nullable=False)
+    category = Column(String(64), nullable=False)  # Compliance, Evidence, Financial, Timeline, Legal_Commercial, Technical
+    likelihood = Column(Integer, default=1, nullable=False)  # 1 to 5
+    impact = Column(Integer, default=1, nullable=False)      # 1 to 5
+    severity_score = Column(Integer, default=1, nullable=False)  # 1 to 25
+    risk_level = Column(String(32), default="Low", nullable=False)  # Low, Medium, High
+    description = Column(Text, nullable=False)
+    consequences = Column(Text, nullable=True)
+    mitigation_strategy = Column(Text, nullable=False)
+    contingency_plan = Column(Text, nullable=True)
+    owner = Column(String(128), default="Bid Manager", nullable=False)
+    status = Column(String(32), default="Open", nullable=False)  # Open, In_Progress, Mitigated, Accepted
+    source_module = Column(String(64), default="compliance", nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    tender = relationship("Tender", back_populates="bid_risks")
+
+    __table_args__ = (
+        Index("ix_bid_risks_tender_sev", "tender_id", "severity_score"),
+    )
+
+
+class ProposalQualityCheck(Base):
+    __tablename__ = "proposal_quality_checks"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    proposal_id = Column(String(36), ForeignKey("proposals.id", ondelete="CASCADE"), nullable=False)
+    checked_by = Column(String(128), default="QualityAuditor", nullable=False)
+    formatting_score = Column(Float, default=100.0, nullable=False)
+    placeholder_count = Column(Integer, default=0, nullable=False)
+    placeholders_found = Column(JSON, default=list, nullable=False)
+    broken_references_count = Column(Integer, default=0, nullable=False)
+    citations_verified_count = Column(Integer, default=0, nullable=False)
+    citations_missing_count = Column(Integer, default=0, nullable=False)
+    word_count = Column(Integer, default=0, nullable=False)
+    page_count_estimate = Column(Integer, default=0, nullable=False)
+    issues = Column(JSON, default=list, nullable=False)
+    passed = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+    proposal = relationship("Proposal", back_populates="quality_checks")
+
+
+class TenderDeadline(Base):
+    __tablename__ = "tender_deadlines"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    tender_id = Column(String(36), ForeignKey("tenders.id", ondelete="CASCADE"), nullable=False)
+    deadline_type = Column(String(64), nullable=False)
+    title = Column(String(255), nullable=False)
+    deadline_date = Column(DateTime, nullable=False)
+    timezone_name = Column(String(64), default="UTC", nullable=False)
+    is_mandatory = Column(Boolean, default=True, nullable=False)
+    status = Column(String(32), default="Upcoming", nullable=False)  # Upcoming, Approaching, Completed, Missed
+    reminder_intervals_hours = Column(JSON, default=list, nullable=False)
+    last_notification_sent_at = Column(DateTime, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    tender = relationship("Tender", back_populates="deadlines")
+
+
+class UserRole(Base):
+    __tablename__ = "user_roles"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    workspace_id = Column(String(36), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(String(128), nullable=False)
+    user_name = Column(String(255), nullable=False)
+    role = Column(String(64), default="Viewer", nullable=False)  # Viewer, Author, Reviewer, Approver, Admin
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+    workspace = relationship("Workspace", back_populates="user_roles")
+
+    __table_args__ = (
+        Index("ix_user_roles_ws_user", "workspace_id", "user_id"),
+    )
+
 
 

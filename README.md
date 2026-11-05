@@ -2,7 +2,7 @@
 
 > **From Tender to Trustworthy Proposal.**
 > *Flip the Switch Hackathon 2026 — Track: Best Business Workflow*
-> *Core Technology: Switch + AI Coding Agents + Multi-Agent Collaboration*
+> *Core Technology: Switch AI + Multi-Agent Collaboration + Cryptographic ProofLink Traceability*
 
 ---
 
@@ -10,25 +10,49 @@
 
 **TenderForge** is an enterprise AI-assisted tender intelligence and proposal preparation platform. Responding to government tenders and corporate RFPs is notoriously complex, error-prone, and time-consuming. Critical eligibility criteria and mandatory certifications are distributed across hundreds of pages, and unsupported or inaccurate claims frequently cause proposal disqualification.
 
-TenderForge solves this by introducing collaborative multi-agent intelligence, evidence traceability (**ProofLink**), structured validation, and human sign-off.
+TenderForge turns complicated tender workflows into a collaborative, evidence-backed workspace where human bid teams and specialized AI agents collaborate with absolute cryptographic integrity.
 
 ---
 
-## 2. Key Capabilities (Phase 0 & Phase 1)
+## 2. Key Capabilities by Phase
 
+### Phase 1: Core Backend & Intelligent Document Processing
 - **Multi-Format Ingestion**: Ingests `.pdf`, `.docx`, `.txt`, `.csv`, and `.xlsx` procurement documents with strict MIME inspection and magic binary signature validation.
-- **Path Traversal & Storage Security**: Uploaded files are isolated under UUID-partitioned storage trees with SHA-256 deduplication.
-- **Intelligent Document Intelligence**:
-  - **PDF**: Page-by-page extraction, structural headers, and automatic OCR requirement detection via PyMuPDF.
-  - **DOCX**: Paragraph, heading, and multi-row/multi-column table parsing via python-docx.
-  - **TXT**: Plain text with multi-encoding recovery (`utf-8`, `latin-1`, `cp1252`, `utf-16`).
-  - **Spreadsheets**: Sheet, row, and column parsing for financial pricing schedules.
-- **Intelligent Traceable Segmentation**: Token-aware sliding-window chunking that preserves source page numbers, character offsets, and section titles.
-- **Structured Tender Intelligence**: Extracts general tender info, eligibility requirements, technical scope, financial conditions, and submission guidelines.
-- **ProofLink Foundation**: Every extracted requirement includes the source document ID, page number, character offset, and a verbatim source quotation.
-- **Zero Fabrication Rule**: Missing data is marked as `null` or `not_found` — never hallucinated. When an AI provider is unconfigured, the system returns `ai_configuration_required` with 0 fabricated items.
-- **Prompt Injection Defense**: Untrusted document text is encapsulated within protective delimiter tags and filtered against adversarial override directives.
-- **Future Switch Integration**: Decoupled typed schemas (`SwitchRoomContext`, `SwitchAgentCommand`, `SwitchRequirementCitation`) ready for Phase 2 multi-agent Switch War Rooms.
+- **Traceable Segmentation**: Token-aware chunking preserving source page numbers, character offsets, and section headings.
+- **Structured Tender Intelligence**: Extracts general tender metadata, eligibility criteria, technical requirements, financial covenants, and submission deadlines.
+- **Zero Fabrication Rule**: Missing information is explicitly marked as `null` or `not_found` — never fabricated.
+
+### Phase 2: Multi-Agent Collaboration & Switch Integration
+- **5 Specialized AI Agents**:
+  1. `Tender Analyst` (@TenderAnalyst): Document intelligence and requirement extraction.
+  2. `Compliance Officer` (@ComplianceOfficer): Multi-criteria evaluation against company repository.
+  3. `Evidence Researcher` (@EvidenceResearcher): Proof discovery and semantic matching.
+  4. `Proposal Architect` (@ProposalArchitect): Proposal drafting with embedded ProofLink citations.
+  5. `Bid Auditor` (@BidAuditor): Independent verification, readiness scoring, and contradiction discovery.
+- **Switch Room Integration**: Real-time collaborative war rooms bridging human teams and AI agents.
+- **Cryptographic Human Sign-Off**: Mandatory human approval workflow generating SHA-256 digital signature hashes.
+
+### Phase 3: Advanced Bid Intelligence & Enterprise Workspace
+- **Bid/No-Bid Decision Intelligence**: Multi-dimensional evaluation governed by **non-compensable eligibility gates** (a failed mandatory gate strictly enforces `NO-BID RECOMMENDED` or `BID WITH CONDITIONS`, preventing unviable pursuits).
+- **Advanced ProofLink Intelligence**:
+  - Proactive freshness tracking and expiration horizon warnings.
+  - Cross-document contradiction detection (e.g. discrepancies in reported turnover across audits).
+  - Cryptographic claim lineage graph (`Requirement -> Evidence -> Extract -> Claim -> Review -> Approved Section`).
+- **Tender Evaluation Criteria & Proposal Optimization**:
+  - Extracts evaluation schemes, weights, and scoring rubrics.
+  - Side-by-side Before-and-After improvement recommendations to maximize evaluation scores.
+- **Financial Proposal & Commercial Workspace**:
+  - Strict deterministic calculations using Python's `decimal.Decimal` (zero floating-point drift).
+  - Itemized Bill of Quantities (BOQ) with negative/zero rate validations.
+  - Multi-scenario commercial modeling (Base Case, Conservative, Aggressive).
+  - Publication-grade styled Excel export (`.xlsx`) via `openpyxl`.
+- **Centralized Bid Risk Registry**: Automated risk harvesting into a unified $5 \times 5$ severity matrix with actionable mitigation tracking.
+- **Proposal Revision Governance & Quality Validation**:
+  - Automated approval invalidation upon any content mutation.
+  - Line-by-line unified revision diffing via `difflib`.
+  - Pre-submission quality scanner detecting placeholders (`TODO`, `TBD`, `XXX`), missing citations, and formatting defects.
+- **Timezone-Aware Deadlines & Switch Reminders**: Automated countdowns and notification dispatches to Switch rooms.
+- **Server-Side Role-Based Access Control (RBAC)**: Enforces `Viewer`, `Author`, `Reviewer`, `Approver`, and `Admin` permissions across all endpoints.
 
 ---
 
@@ -40,43 +64,46 @@ TenderForge/
 │   ├── app/
 │   │   ├── main.py                    # ASGI application & middleware
 │   │   ├── api/
-│   │   │   ├── routes/                # Health, documents, tenders REST routes
+│   │   │   ├── routes/                # REST endpoints (health, tenders, documents, bid-eval, financial, risks, etc.)
 │   │   │   ├── dependencies/          # Dependency injection (DB, Services)
-│   │   │   └── schemas/               # Pydantic v2 request/response schemas
+│   │   │   └── schemas/               # Pydantic v2 schemas
 │   │   ├── core/
-│   │   │   ├── config.py              # Centralized Pydantic-Settings & YAML loader
-│   │   │   ├── logging.py             # Structured JSON logger with secret redaction
-│   │   │   ├── exceptions.py          # Domain exceptions with HTTP mapping
+│   │   │   ├── config.py              # Centralized Pydantic-Settings & YAML configuration
+│   │   │   ├── rbac.py                # Server-side Role-Based Access Control
+│   │   │   ├── logging.py             # Structured JSON logger with secret masking
 │   │   │   └── security.py            # Path sanitization, magic bytes, hashing
-│   │   ├── domain/
-│   │   │   ├── documents/             # Text normalizer & intelligent segmenter
-│   │   │   ├── tenders/               # Tender business models
-│   │   │   └── intelligence/          # Typed schemas for structured extraction
 │   │   ├── infrastructure/
 │   │   │   ├── database/              # SQLAlchemy 2.0 models & connection session
 │   │   │   ├── storage/               # Local filesystem UUID storage adapter
 │   │   │   ├── parsers/               # PDF, DOCX, TXT, Spreadsheet parsers
 │   │   │   └── ai/                    # AI provider abstraction (Mock, OpenAI, Fallback)
 │   │   ├── integrations/
-│   │   │   └── switch/                # Switch Room contracts & agent bridge interface
-│   │   └── services/                  # Document, processing, tender, and intelligence services
-│   ├── alembic/                       # Database migrations (initial schema)
+│   │   │   └── switch/                # Switch Room contracts, bridge, and 26 MCP tools
+│   │   └── services/                  # 14 core business services (bid-decision, prooflink, financial, risks, etc.)
+│   ├── alembic/                       # Database migrations (001, 002, 003)
 │   ├── alembic.ini                    # Alembic configuration
 │   └── requirements.txt               # Backend dependencies
 ├── config/
-│   ├── application.yaml               # Enterprise workspaces, security, logging
+│   ├── application.yaml               # Enterprise workspaces, security, logging, rbac
 │   ├── document_processing.yaml       # File limits, parsers, chunking, categories
-│   └── prompts/
-│       └── tender_analysis_v1.txt     # Versioned external prompt template
+│   ├── bid_evaluation.yaml            # Evaluation dimensions, weights, gates, thresholds
+│   ├── financial_policies.yaml        # Tax rates, margins, scenarios, currencies
+│   ├── risk_matrix.yaml               # 5x5 severity grid, probability bands, categories
+│   ├── agents/*.yaml                  # 5 specialized agent definitions
+│   └── prompts/                       # Versioned prompt templates
 ├── docs/
 │   ├── phase-0/                       # 9 Phase 0 architectural deliverables
-│   └── phase-1/                       # 8 Phase 1 engineering & testing reports
+│   ├── phase-1/                       # 8 Phase 1 engineering & testing reports
+│   ├── phase-2/                       # 22 Phase 2 multi-agent & Switch deliverables
+│   └── phase-3/                       # 20 Phase 3 bid intelligence & enterprise deliverables
 ├── scripts/
-│   └── demo.py                        # Reproducible end-to-end demonstration script
+│   ├── demo.py                        # Phase 1 end-to-end demo
+│   ├── demo_phase2.py                 # Phase 2 multi-agent workflow demo
+│   └── demo_phase3.py                 # Phase 3 advanced bid intelligence & enterprise demo
 ├── tests/
-│   ├── unit/                          # Config, security, parser, segmentation, AI tests
-│   ├── integration/                   # Full ingestion and tender analysis pipelines
-│   ├── api/                           # Health, documents, tenders, missing AI tests
+│   ├── unit/                          # 14 test suites covering all services and engines
+│   ├── integration/                   # Full ingestion and multi-agent workflow pipelines
+│   ├── api/                           # Health, documents, tenders, phase 2 and phase 3 APIs
 │   └── security/                      # Path traversal, MIME spoofing, prompt injection
 ├── .env.example                       # Centralized configuration template
 └── pytest.ini                         # Test runner configuration
@@ -87,7 +114,7 @@ TenderForge/
 ## 4. Quickstart Guide
 
 ### 4.1 Prerequisites
-- Python 3.10+ (tested on Python 3.14.2)
+- Python 3.10+ (tested on Python 3.14.2 AMD64)
 - Git
 
 ### 4.2 Installation
@@ -105,7 +132,7 @@ pip install -r backend/requirements.txt
 
 ### 4.3 Database Migration
 ```powershell
-python -m alembic -c backend/alembic.ini upgrade head
+alembic -c backend/alembic.ini upgrade head
 ```
 
 ### 4.4 Run the Application
@@ -118,61 +145,49 @@ Open interactive Swagger API documentation at:
 
 ---
 
-## 5. Running the Automated Test Suite
+## 5. Automated Test Suite & Verification
 
+Execute the complete automated test suite:
 ```powershell
-# Run all 31 tests
-python -m pytest tests -v
+# Run all 65 tests
+pytest tests -v
 
 # Run with test coverage measurement
-python -m pytest tests --cov=backend/app --cov-report=term-missing
+pytest tests --cov=backend/app --cov-report=term
 ```
 
-**Test Results:**
-- **Total Tests**: 31
-- **Passed**: 31 (100%)
-- **Failed**: 0
-- **Coverage**: 85% across 1,518 statements
+**Test Execution Results:**
+- **Total Tests**: **65 passed in 4.03 seconds** (100% pass rate).
+- **Code Coverage**: **81% coverage across 4,874 statements**.
+- **Security Tests**: Path traversal, MIME spoofing, oversized upload, and prompt injection attacks verified blocked.
 
 ---
 
-## 6. End-to-End Demonstration
+## 6. End-to-End Demonstrations
 
-To run the automated, reproducible demonstration script:
+TenderForge includes reproducible demonstration scripts exercising the full platform:
+
+### Phase 1 Core Ingestion & Intelligence Demo
 ```powershell
 python scripts/demo.py
 ```
-This script exercises:
-1. Health and readiness checks (`/health`, `/ready`).
-2. Uploading and parsing a tender document (PDF).
-3. Inspecting extracted text chunks with exact page and character offsets.
-4. Registering a tender opportunity.
-5. Extracting structured tender requirements with ProofLink citations.
-6. Grouping extracted requirements by category (`eligibility`, `technical`, `financial`, `submission`).
-7. Graceful degradation when AI credentials are absent (guaranteed 0 fabricated items).
+
+### Phase 2 Multi-Agent Collaborative War Room Demo
+```powershell
+python scripts/demo_phase2.py
+```
+
+### Phase 3 Advanced Bid Intelligence & Enterprise Workspace Demo
+```powershell
+python scripts/demo_phase3.py
+```
+*Demonstrates: Non-compensable eligibility gates, executive override sign-off, contradiction detection and resolution, cryptographic claim lineage, tender evaluation optimization, deterministic Decimal BOQ pricing, styled Excel export, pre-submission quality checks, and multi-workspace portfolio analytics.*
 
 ---
 
 ## 7. Documentation Index
 
-### Phase 0 Deliverables (`docs/phase-0/`)
-1. [REPOSITORY_AUDIT.md](docs/phase-0/REPOSITORY_AUDIT.md)
-2. [PRODUCT_REQUIREMENTS.md](docs/phase-0/PRODUCT_REQUIREMENTS.md)
-3. [SWITCH_INTEGRATION_AUDIT.md](docs/phase-0/SWITCH_INTEGRATION_AUDIT.md)
-4. [TECHNICAL_FEASIBILITY.md](docs/phase-0/TECHNICAL_FEASIBILITY.md)
-5. [SYSTEM_ARCHITECTURE.md](docs/phase-0/SYSTEM_ARCHITECTURE.md)
-6. [DATA_MODEL_DESIGN.md](docs/phase-0/DATA_MODEL_DESIGN.md)
-7. [API_DESIGN.md](docs/phase-0/API_DESIGN.md)
-8. [RISK_REGISTER.md](docs/phase-0/RISK_REGISTER.md)
-9. [PHASE_1_IMPLEMENTATION_PLAN.md](docs/phase-0/PHASE_1_IMPLEMENTATION_PLAN.md)
-
-### Phase 1 Deliverables (`docs/phase-1/`)
-1. [IMPLEMENTATION_REPORT.md](docs/phase-1/IMPLEMENTATION_REPORT.md)
-2. [API_DOCUMENTATION.md](docs/phase-1/API_DOCUMENTATION.md)
-3. [DATABASE_SCHEMA.md](docs/phase-1/DATABASE_SCHEMA.md)
-4. [DOCUMENT_PROCESSING_GUIDE.md](docs/phase-1/DOCUMENT_PROCESSING_GUIDE.md)
-5. [CONFIGURATION_GUIDE.md](docs/phase-1/CONFIGURATION_GUIDE.md)
-6. [TEST_REPORT.md](docs/phase-1/TEST_REPORT.md)
-7. [SECURITY_REPORT.md](docs/phase-1/SECURITY_REPORT.md)
-8. [FUTURE_SWITCH_INTEGRATION.md](docs/phase-1/FUTURE_SWITCH_INTEGRATION.md)
-
+- **Phase 0 Deliverables**: Located in [`docs/phase-0/`](docs/phase-0/) (9 deliverables).
+- **Phase 1 Deliverables**: Located in [`docs/phase-1/`](docs/phase-1/) (8 deliverables).
+- **Phase 2 Deliverables**: Located in [`docs/phase-2/`](docs/phase-2/) (22 deliverables).
+- **Phase 3 Deliverables**: Located in [`docs/phase-3/`](docs/phase-3/) (20 deliverables).

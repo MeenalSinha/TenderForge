@@ -1,4 +1,4 @@
-"""API routes package."""
+"""API routes package for TenderForge."""
 from backend.app.api.routes.compliance import router as compliance_router
 from backend.app.api.routes.documents import router as documents_router
 from backend.app.api.routes.evidence import router as evidence_router
@@ -8,6 +8,13 @@ from backend.app.api.routes.proposals import router as proposals_router
 from backend.app.api.routes.switch import router as switch_router
 from backend.app.api.routes.tenders import router as tenders_router
 from backend.app.api.routes.workflow import router as workflow_router
+from backend.app.api.routes.bid_decision import router as bid_decision_router
+from backend.app.api.routes.financial import router as financial_router
+from backend.app.api.routes.portfolio import router as portfolio_router
+from backend.app.api.routes.risks import router as risks_router
+from backend.app.api.routes.deadlines import router as deadlines_router
+from backend.app.api.routes.analytics import router as analytics_router
+from backend.app.api.routes.optimizations import router as optimizations_router
 
 __all__ = [
     "health_router",
@@ -19,4 +26,11 @@ __all__ = [
     "proposals_router",
     "switch_router",
     "workflow_router",
+    "bid_decision_router",
+    "financial_router",
+    "portfolio_router",
+    "risks_router",
+    "deadlines_router",
+    "analytics_router",
+    "optimizations_router",
 ]

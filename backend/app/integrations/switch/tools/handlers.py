@@ -34,6 +34,13 @@ from backend.app.services.prooflink_service import ProofLinkService
 from backend.app.services.proposal_service import ProposalService
 from backend.app.services.tender_intelligence_service import TenderIntelligenceService
 from backend.app.services.tender_service import TenderService
+from backend.app.services.bid_decision_service import BidDecisionService
+from backend.app.services.advanced_prooflink_service import AdvancedProofLinkService
+from backend.app.services.financial_service import FinancialService
+from backend.app.services.risk_service import RiskService
+from backend.app.services.proposal_optimization_service import ProposalOptimizationService
+from backend.app.services.proposal_revision_service import ProposalRevisionService
+from backend.app.services.portfolio_service import PortfolioService
 
 logger = get_logger("tool_handlers")
 
@@ -52,6 +59,13 @@ class ToolDispatcher:
         self.audit_service = AuditService()
         self.approval_service = ApprovalService()
         self.export_service = ExportService()
+        self.bid_decision_service = BidDecisionService()
+        self.adv_prooflink_service = AdvancedProofLinkService()
+        self.financial_service = FinancialService()
+        self.risk_service = RiskService()
+        self.opt_service = ProposalOptimizationService()
+        self.revision_service = ProposalRevisionService()
+        self.portfolio_service = PortfolioService()
 
     def execute(
         self,
@@ -346,6 +360,145 @@ class ToolDispatcher:
             "package_path": zip_path,
             "filename": str(zip_path).split("\\")[-1].split("/")[-1],
         }
+
+    def _tool_evaluate_bid_decision(self, db: Session, args: Dict[str, Any], caller_id: str) -> Dict[str, Any]:
+        res = self.bid_decision_service.evaluate_tender(
+            tender_id=args["tender_id"],
+            db=db,
+            evaluator_type="agent",
+            evaluator_id=caller_id,
+        )
+        return {
+            "status": "success",
+            "evaluation_id": res.id,
+            "recommendation": res.recommendation,
+            "overall_score": res.overall_score,
+            "eligibility_gates_passed": res.eligibility_gates_passed,
+            "failed_gates": res.failed_gates,
+            "conditions": res.conditions,
+        }
+
+    def _tool_audit_evidence_freshness(self, db: Session, args: Dict[str, Any], caller_id: str) -> Dict[str, Any]:
+        res = self.adv_prooflink_service.audit_evidence_freshness(
+            organization_id=args["organization_id"],
+            db=db,
+        )
+        return {"status": "success", **res}
+
+    def _tool_detect_evidence_contradictions(self, db: Session, args: Dict[str, Any], caller_id: str) -> Dict[str, Any]:
+        items = self.adv_prooflink_service.detect_evidence_contradictions(
+            organization_id=args["organization_id"],
+            db=db,
+        )
+        return {
+            "status": "success",
+            "contradictions_count": len(items),
+            "contradictions": [
+                {
+                    "id": c.id,
+                    "claim_field": c.claim_field,
+                    "value_1": c.value_1,
+                    "value_2": c.value_2,
+                    "severity": c.contradiction_severity,
+                }
+                for c in items
+            ],
+        }
+
+    def _tool_manage_financial_proposal(self, db: Session, args: Dict[str, Any], caller_id: str) -> Dict[str, Any]:
+        prop = self.financial_service.create_financial_proposal(
+            tender_id=args["tender_id"],
+            title=args.get("title", "Commercial Proposal"),
+            initial_items=args.get("initial_items"),
+            db=db,
+        )
+        return {
+            "status": "success",
+            "financial_proposal_id": prop.id,
+            "currency": prop.currency,
+            "subtotal": prop.subtotal,
+            "tax_amount": prop.tax_amount,
+            "margin_amount": prop.margin_amount,
+            "total_price": prop.total_price,
+        }
+
+    def _tool_generate_pricing_scenarios(self, db: Session, args: Dict[str, Any], caller_id: str) -> Dict[str, Any]:
+        scenarios = self.financial_service.generate_scenarios(
+            financial_proposal_id=args["financial_proposal_id"],
+            db=db,
+        )
+        return {
+            "status": "success",
+            "scenarios": [
+                {
+                    "name": s.scenario_name,
+                    "total": s.calculated_total,
+                    "margin_percent": s.margin_rate_percent,
+                }
+                for s in scenarios
+            ],
+        }
+
+    def _tool_harvest_bid_risks(self, db: Session, args: Dict[str, Any], caller_id: str) -> Dict[str, Any]:
+        risks = self.risk_service.harvest_risks_for_tender(
+            tender_id=args["tender_id"],
+            db=db,
+        )
+        return {
+            "status": "success",
+            "harvested_count": len(risks),
+            "risks": [
+                {
+                    "id": r.id,
+                    "title": r.title,
+                    "category": r.category,
+                    "severity_score": r.severity_score,
+                    "risk_level": r.risk_level,
+                }
+                for r in risks
+            ],
+        }
+
+    def _tool_optimize_proposal_coverage(self, db: Session, args: Dict[str, Any], caller_id: str) -> Dict[str, Any]:
+        opts = self.opt_service.analyze_and_optimize(
+            proposal_id=args["proposal_id"],
+            db=db,
+        )
+        return {
+            "status": "success",
+            "optimizations_count": len(opts),
+            "optimizations": [
+                {
+                    "id": o.id,
+                    "section_number": o.section_number,
+                    "coverage_status": o.coverage_status,
+                    "potential_score_estimate": o.potential_score_estimate,
+                }
+                for o in opts
+            ],
+        }
+
+    def _tool_validate_proposal_quality(self, db: Session, args: Dict[str, Any], caller_id: str) -> Dict[str, Any]:
+        qc = self.revision_service.validate_proposal_quality(
+            proposal_id=args["proposal_id"],
+            checked_by=caller_id,
+            db=db,
+        )
+        return {
+            "status": "success",
+            "quality_check_id": qc.id,
+            "formatting_score": qc.formatting_score,
+            "passed": qc.passed,
+            "placeholder_count": qc.placeholder_count,
+            "word_count": qc.word_count,
+        }
+
+    def _tool_get_portfolio_summary(self, db: Session, args: Dict[str, Any], caller_id: str) -> Dict[str, Any]:
+        overview = self.portfolio_service.get_portfolio_overview(
+            workspace_id=args["workspace_id"],
+            db=db,
+        )
+        return {"status": "success", **overview}
 
 
 # Global tool dispatcher

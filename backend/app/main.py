@@ -20,6 +20,13 @@ from backend.app.api.routes import (
     switch_router,
     tenders_router,
     workflow_router,
+    bid_decision_router,
+    financial_router,
+    portfolio_router,
+    risks_router,
+    deadlines_router,
+    analytics_router,
+    optimizations_router,
 )
 from backend.app.api.schemas.common import ErrorDetail, ResponseEnvelope
 from backend.app.core.config import settings
@@ -148,6 +155,13 @@ def create_app() -> FastAPI:
     app.include_router(proposals_router, prefix=settings.API_V1_PREFIX)
     app.include_router(switch_router, prefix=settings.API_V1_PREFIX)
     app.include_router(workflow_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(bid_decision_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(financial_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(portfolio_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(risks_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(deadlines_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(analytics_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(optimizations_router, prefix=settings.API_V1_PREFIX)
 
     return app
 

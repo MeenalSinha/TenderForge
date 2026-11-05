@@ -1,0 +1,71 @@
+# ==============================================================================
+# TenderForge Financial Proposal & Pricing Policies
+# ==============================================================================
+financial_policies:
+  currency_defaults:
+    default_currency: "USD"
+    supported_currencies:
+      - "USD"
+      - "EUR"
+      - "GBP"
+      - "INR"
+      - "AED"
+      - "SGD"
+      - "CAD"
+      - "AUD"
+    precision: 2
+    rounding_mode: "ROUND_HALF_UP"
+
+  default_rates:
+    tax_rate_percent: "10.00"
+    contingency_rate_percent: "5.00"
+    overhead_rate_percent: "8.00"
+    margin_rate_percent: "15.00"
+
+  categories:
+    - id: "Labor"
+      name: "Engineering & Professional Services"
+      default_tax_percent: "10.00"
+    - id: "Hardware"
+      name: "Physical Equipment & Infrastructure"
+      default_tax_percent: "15.00"
+    - id: "Software"
+      name: "Licenses, Subscriptions & Cloud Resources"
+      default_tax_percent: "10.00"
+    - id: "Services"
+      name: "Third-party Subcontractors & Integration"
+      default_tax_percent: "10.00"
+    - id: "Travel"
+      name: "Travel, Lodging & Onsite Expenses"
+      default_tax_percent: "5.00"
+    - id: "Contingency"
+      name: "Risk Provision & Unforeseen Costs"
+      default_tax_percent: "0.00"
+
+  scenario_templates:
+    base_case:
+      name: "Base Case"
+      description: "Standard commercial model with healthy margins and standard risk buffer."
+      margin_rate_percent: "15.00"
+      contingency_rate_percent: "5.00"
+      discount_percent: "0.00"
+
+    conservative:
+      name: "Conservative"
+      description: "Risk-averse model with higher contingency buffers and premium margins."
+      margin_rate_percent: "22.00"
+      contingency_rate_percent: "10.00"
+      discount_percent: "0.00"
+
+    aggressive:
+      name: "Aggressive"
+      description: "Highly competitive model with optimized pricing to maximize win probability."
+      margin_rate_percent: "9.50"
+      contingency_rate_percent: "3.00"
+      discount_percent: "5.00"
+
+  validation_rules:
+    disallow_negative_unit_rates: true
+    disallow_zero_quantities: true
+    warn_on_margin_below_percent: "5.00"
+    warn_on_contingency_below_percent: "2.00"

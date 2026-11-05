@@ -51,6 +51,9 @@ class Settings(BaseSettings):
     # Config File Paths
     CONFIG_PATH_APP: str = "./config/application.yaml"
     CONFIG_PATH_DOC_PROCESSING: str = "./config/document_processing.yaml"
+    CONFIG_PATH_BID_EVAL: str = "./config/bid_evaluation.yaml"
+    CONFIG_PATH_FINANCIAL: str = "./config/financial_policies.yaml"
+    CONFIG_PATH_RISK_MATRIX: str = "./config/risk_matrix.yaml"
     PROMPTS_DIR: str = "./config/prompts"
 
     # AI Provider
@@ -66,6 +69,9 @@ class Settings(BaseSettings):
     # Cached YAML configurations loaded at runtime
     _app_yaml: Dict[str, Any] = {}
     _doc_yaml: Dict[str, Any] = {}
+    _bid_eval_yaml: Dict[str, Any] = {}
+    _financial_yaml: Dict[str, Any] = {}
+    _risk_matrix_yaml: Dict[str, Any] = {}
 
     def model_post_init(self, __context: Any) -> None:
         """Load external YAML files and verify critical paths."""
@@ -82,6 +88,21 @@ class Settings(BaseSettings):
         if doc_path.exists():
             with open(doc_path, "r", encoding="utf-8") as f:
                 self._doc_yaml = yaml.safe_load(f) or {}
+
+        bid_path = Path(self.CONFIG_PATH_BID_EVAL)
+        if bid_path.exists():
+            with open(bid_path, "r", encoding="utf-8") as f:
+                self._bid_eval_yaml = yaml.safe_load(f) or {}
+
+        fin_path = Path(self.CONFIG_PATH_FINANCIAL)
+        if fin_path.exists():
+            with open(fin_path, "r", encoding="utf-8") as f:
+                self._financial_yaml = yaml.safe_load(f) or {}
+
+        risk_path = Path(self.CONFIG_PATH_RISK_MATRIX)
+        if risk_path.exists():
+            with open(risk_path, "r", encoding="utf-8") as f:
+                self._risk_matrix_yaml = yaml.safe_load(f) or {}
 
     def _ensure_storage_directories(self) -> None:
         Path(self.STORAGE_ROOT).mkdir(parents=True, exist_ok=True)
@@ -141,6 +162,26 @@ class Settings(BaseSettings):
         return self._app_yaml.get("workspaces", {}).get(
             "default_organization_id", "org-default-0000-0000-000000000000"
         )
+
+    @property
+    def bid_evaluation_config(self) -> Dict[str, Any]:
+        return self._bid_eval_yaml.get("bid_evaluation", {})
+
+    @property
+    def financial_policies_config(self) -> Dict[str, Any]:
+        return self._financial_yaml.get("financial_policies", {})
+
+    @property
+    def risk_matrix_config(self) -> Dict[str, Any]:
+        return self._risk_matrix_yaml.get("risk_matrix", {})
+
+    @property
+    def rbac_config(self) -> Dict[str, Any]:
+        return self._app_yaml.get("rbac", {})
+
+    @property
+    def deadlines_config(self) -> Dict[str, Any]:
+        return self._app_yaml.get("deadlines", {})
 
     @property
     def is_ai_configured(self) -> bool:
