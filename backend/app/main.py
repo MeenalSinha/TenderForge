@@ -1,0 +1,139 @@
+"""
+TenderForge Main Application Factory & ASGI Entrypoint.
+"""
+
+from __future__ import annotations
+
+import uuid
+from datetime import datetime, timezone
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from backend.app.api.routes import documents_router, health_router, tenders_router
+from backend.app.api.schemas.common import ErrorDetail, ResponseEnvelope
+from backend.app.core.config import settings
+from backend.app.core.exceptions import TenderForgeException
+from backend.app.core.logging import correlation_id_ctx, get_logger, setup_logging
+
+# Configure logging at boot
+setup_logging(settings.LOG_LEVEL)
+logger = get_logger("tenderforge.app")
+
+
+class CorrelationIdMiddleware:
+    """Pure ASGI middleware injecting an X-Correlation-ID header without buffering multipart streams."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            corr_id = str(uuid.uuid4())
+            for header_name, header_val in scope.get("headers", []):
+                if header_name.lower() == b"x-correlation-id":
+                    corr_id = header_val.decode("latin1")
+                    break
+
+            token = correlation_id_ctx.set(corr_id)
+
+            async def send_wrapper(message):
+                if message["type"] == "http.response.start":
+                    headers = list(message.get("headers", []))
+                    headers.append((b"x-correlation-id", corr_id.encode("latin1")))
+                    message["headers"] = headers
+                await send(message)
+
+            try:
+                await self.app(scope, receive, send_wrapper)
+            finally:
+                correlation_id_ctx.reset(token)
+        else:
+            await self.app(scope, receive, send)
+
+
+def create_app() -> FastAPI:
+    """Application factory configuring routes, middleware, and exception handlers."""
+    app = FastAPI(
+        title=settings.APP_NAME,
+        version=settings.APP_VERSION,
+        description="AI-Powered Collaborative Tender Intelligence & Proposal Preparation Platform",
+        docs_url="/docs",
+        redoc_url="/redoc",
+        openapi_url="/openapi.json",
+    )
+
+    # 1. Middlewares
+    app.add_middleware(CorrelationIdMiddleware)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.CORS_ORIGINS,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    # 2. Centralized Exception Handlers
+    @app.exception_handler(TenderForgeException)
+    async def handle_domain_exception(request: Request, exc: TenderForgeException) -> JSONResponse:
+        logger.warning(f"Domain exception [{exc.code}]: {exc.message}")
+        envelope = ResponseEnvelope[None](
+            success=False,
+            status_code=exc.status_code,
+            message=exc.message,
+            data=None,
+            errors=[ErrorDetail(code=exc.code, detail=exc.message)],
+            correlation_id=correlation_id_ctx.get(),
+            timestamp=datetime.now(timezone.utc),
+        )
+        return JSONResponse(status_code=exc.status_code, content=envelope.model_dump(mode="json"))
+
+    @app.exception_handler(RequestValidationError)
+    async def handle_validation_exception(request: Request, exc: RequestValidationError) -> JSONResponse:
+        errors = [
+            ErrorDetail(
+                code="REQUEST_VALIDATION_ERROR",
+                detail=f"{'.'.join(str(loc) for loc in err['loc'])}: {err['msg']}",
+            )
+            for err in exc.errors()
+        ]
+        envelope = ResponseEnvelope[None](
+            success=False,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            message="Request validation failed.",
+            data=None,
+            errors=errors,
+            correlation_id=correlation_id_ctx.get(),
+            timestamp=datetime.now(timezone.utc),
+        )
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content=envelope.model_dump(mode="json"),
+        )
+
+    @app.exception_handler(Exception)
+    async def handle_unhandled_exception(request: Request, exc: Exception) -> JSONResponse:
+        logger.error(f"Unhandled server error: {str(exc)}", exc_info=True)
+        envelope = ResponseEnvelope[None](
+            success=False,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            message="An internal server error occurred.",
+            data=None,
+            errors=[ErrorDetail(code="INTERNAL_ERROR", detail="An unexpected error occurred.")],
+            correlation_id=correlation_id_ctx.get(),
+            timestamp=datetime.now(timezone.utc),
+        )
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content=envelope.model_dump(mode="json"),
+        )
+
+    # 3. Mount Routers
+    app.include_router(health_router)
+    app.include_router(documents_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(tenders_router, prefix=settings.API_V1_PREFIX)
+
+    return app
+
+
+app = create_app()

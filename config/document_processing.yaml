@@ -1,0 +1,61 @@
+# ==============================================================================
+# TenderForge Document Processing & Intelligence Configuration
+# ==============================================================================
+
+formats:
+  allowed_extensions:
+    - ".pdf"
+    - ".docx"
+    - ".txt"
+    - ".csv"
+    - ".xlsx"
+  mime_mappings:
+    ".pdf": "application/pdf"
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ".txt": "text/plain"
+    ".csv": "text/csv"
+    ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+parsers:
+  pdf:
+    primary: "PyMuPDFParser"
+    fallback: "PyPDFParser"
+    min_page_char_threshold: 40
+    enable_ocr_detection: true
+  docx:
+    extract_tables: true
+    extract_headers: true
+  txt:
+    fallback_encodings:
+      - "utf-8"
+      - "latin-1"
+      - "cp1252"
+      - "utf-16"
+  spreadsheet:
+    data_only: true
+    max_rows_per_sheet: 5000
+
+segmentation:
+  strategy: "token_aware_character"
+  chunk_size_chars: 1200
+  chunk_overlap_chars: 200
+  min_chunk_size_chars: 100
+  preserve_section_headers: true
+  strip_excessive_whitespace: true
+
+intelligence:
+  schema_version: "1.0.0"
+  default_prompt_template: "tender_analysis_v1.txt"
+  categories:
+    - "eligibility"
+    - "technical"
+    - "financial"
+    - "submission"
+    - "general"
+  classifications:
+    - "mandatory"
+    - "optional"
+    - "desirable"
+  confidence_threshold_warning: 0.60
+  max_context_chunks_for_ai: 25
+

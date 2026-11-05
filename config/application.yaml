@@ -1,0 +1,31 @@
+# ==============================================================================
+# TenderForge Application Configuration
+# ==============================================================================
+application:
+  name: "TenderForge"
+  version: "1.0.0"
+  description: "AI-Powered Collaborative Tender Intelligence & Proposal Preparation"
+  tagline: "From Tender to Trustworthy Proposal"
+
+workspaces:
+  default_id: "ws-default-0000-0000-000000000000"
+  default_name: "Default Workspace"
+  default_organization_id: "org-default-0000-0000-000000000000"
+
+security:
+  enforce_file_signatures: true
+  allowed_origins:
+    - "*"
+  rate_limit_per_minute: 120
+  token_leak_protection: true
+
+logging:
+  format: "json"
+  include_correlation_id: true
+  mask_keys:
+    - "api_key"
+    - "password"
+    - "token"
+    - "secret"
+    - "authorization"
+
