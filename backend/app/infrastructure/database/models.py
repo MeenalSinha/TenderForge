@@ -794,5 +794,259 @@ class UserSession(Base):
     user = relationship("User", back_populates="sessions")
 
 
+# ==============================================================================
+# PHASE 5: PROACTIVE PROCUREMENT INTELLIGENCE & BID LEARNING MODELS
+# ==============================================================================
+
+
+class ProcurementSource(Base):
+    __tablename__ = "procurement_sources"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    organization_id = Column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    connector_type = Column(String(64), nullable=False)  # manual_import, open_contracting, government_portal, mock_sandbox
+    endpoint_url = Column(String(1024), nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    auth_type = Column(String(64), default="none", nullable=False)  # none, api_key, bearer, basic
+    auth_config = Column(JSON, default=dict, nullable=False)  # encrypted or token refs
+    polling_interval_minutes = Column(Integer, default=60, nullable=False)
+    last_synced_at = Column(DateTime, nullable=True)
+    sync_status = Column(String(64), default="idle", nullable=False)  # idle, syncing, success, failed
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    connector_runs = relationship("ConnectorRun", back_populates="source", cascade="all, delete-orphan")
+    opportunities = relationship("SourceOpportunity", back_populates="source", cascade="all, delete-orphan")
+
+
+class ConnectorRun(Base):
+    __tablename__ = "connector_runs"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    source_id = Column(String(36), ForeignKey("procurement_sources.id", ondelete="CASCADE"), nullable=False)
+    status = Column(String(64), default="running", nullable=False)  # running, completed, failed
+    started_at = Column(DateTime, default=utcnow, nullable=False)
+    completed_at = Column(DateTime, nullable=True)
+    items_discovered = Column(Integer, default=0, nullable=False)
+    items_ingested = Column(Integer, default=0, nullable=False)
+    error_message = Column(Text, nullable=True)
+    run_log = Column(JSON, default=list, nullable=False)
+
+    source = relationship("ProcurementSource", back_populates="connector_runs")
+
+
+class SourceOpportunity(Base):
+    __tablename__ = "source_opportunities"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    source_id = Column(String(36), ForeignKey("procurement_sources.id", ondelete="CASCADE"), nullable=False)
+    organization_id = Column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    external_id = Column(String(255), nullable=True)
+    title = Column(String(512), nullable=False)
+    buyer_name = Column(String(255), nullable=False)
+    procurement_category = Column(String(128), default="general", nullable=False)
+    estimated_budget = Column(Float, nullable=True)
+    currency = Column(String(10), default="USD", nullable=False)
+    published_date = Column(DateTime, nullable=True)
+    submission_deadline = Column(DateTime, nullable=True)
+    status = Column(String(64), default="open", nullable=False)  # open, closing_soon, closed, awarded, cancelled
+    opportunity_url = Column(String(1024), nullable=True)
+    canonical_summary = Column(Text, nullable=True)
+    raw_payload = Column(JSON, default=dict, nullable=False)
+    deduplication_hash = Column(String(64), nullable=False, index=True)
+    match_status = Column(String(64), default="unmatched", nullable=False)  # unmatched, matched, dismissed, promoted_to_workspace
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    source = relationship("ProcurementSource", back_populates="opportunities")
+    matches = relationship("OpportunityMatch", back_populates="opportunity", cascade="all, delete-orphan")
+
+    __table_args__ = (
+        Index("ix_source_opp_org_hash", "organization_id", "deduplication_hash"),
+    )
+
+
+class OpportunityMatch(Base):
+    __tablename__ = "opportunity_matches"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    opportunity_id = Column(String(36), ForeignKey("source_opportunities.id", ondelete="CASCADE"), nullable=False)
+    organization_id = Column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    overall_match_score = Column(Float, nullable=False)
+    recommendation_tier = Column(String(64), nullable=False)  # STRONGLY RECOMMENDED, RECOMMENDED WITH CONDITIONS, PURSUIT NOT RECOMMENDED
+    mandatory_gates_passed = Column(Boolean, default=True, nullable=False)
+    dimension_scores = Column(JSON, default=dict, nullable=False)  # 9 dimensions breakdown
+    explainability_breakdown = Column(JSON, default=dict, nullable=False)  # strengths, weaknesses, uncertainties
+    missing_evidence_requirements = Column(JSON, default=list, nullable=False)
+    generated_at = Column(DateTime, default=utcnow, nullable=False)
+
+    opportunity = relationship("SourceOpportunity", back_populates="matches")
+
+
+class TenderMonitorSubscription(Base):
+    __tablename__ = "tender_monitor_subscriptions"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    tender_id = Column(String(36), ForeignKey("tenders.id", ondelete="CASCADE"), nullable=False)
+    organization_id = Column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    source_id = Column(String(36), ForeignKey("procurement_sources.id", ondelete="SET NULL"), nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    check_frequency_minutes = Column(Integer, default=60, nullable=False)
+    last_checked_at = Column(DateTime, nullable=True)
+    last_snapshot_hash = Column(String(64), nullable=True)
+    notify_channels = Column(JSON, default=list, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    snapshots = relationship("TenderSnapshot", back_populates="subscription", cascade="all, delete-orphan")
+
+
+class TenderSnapshot(Base):
+    __tablename__ = "tender_snapshots"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    subscription_id = Column(String(36), ForeignKey("tender_monitor_subscriptions.id", ondelete="CASCADE"), nullable=False)
+    tender_id = Column(String(36), ForeignKey("tenders.id", ondelete="CASCADE"), nullable=False)
+    snapshot_version = Column(Integer, default=1, nullable=False)
+    content_hash = Column(String(64), nullable=False, index=True)
+    raw_content = Column(Text, nullable=True)
+    metadata_payload = Column(JSON, default=dict, nullable=False)
+    captured_at = Column(DateTime, default=utcnow, nullable=False)
+
+    subscription = relationship("TenderMonitorSubscription", back_populates="snapshots")
+
+
+class TenderAmendment(Base):
+    __tablename__ = "tender_amendments"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    tender_id = Column(String(36), ForeignKey("tenders.id", ondelete="CASCADE"), nullable=False)
+    amendment_number = Column(String(64), nullable=False)
+    title = Column(String(512), nullable=False)
+    publication_date = Column(DateTime, default=utcnow, nullable=False)
+    materiality = Column(String(64), default="minor", nullable=False)  # critical, major, minor
+    diff_summary = Column(Text, nullable=False)
+    affected_clauses = Column(JSON, default=list, nullable=False)
+    downstream_impact = Column(JSON, default=dict, nullable=False)  # affected requirements, compliance, boq, proposals
+    approval_invalidated = Column(Boolean, default=False, nullable=False)
+    acknowledged_by_user_id = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    acknowledged_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+
+class AwardRecord(Base):
+    __tablename__ = "award_records"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    organization_id = Column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    tender_reference = Column(String(255), nullable=False)
+    buyer_name = Column(String(255), nullable=False)
+    winning_bidder = Column(String(255), nullable=False)
+    award_amount = Column(Float, nullable=False)
+    currency = Column(String(10), default="USD", nullable=False)
+    award_date = Column(DateTime, nullable=False)
+    procurement_category = Column(String(128), default="general", nullable=False)
+    source_provenance = Column(String(512), nullable=False)
+    verification_status = Column(String(64), default="verified", nullable=False)  # verified, unverified
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+
+class CompetitorRecord(Base):
+    __tablename__ = "competitor_records"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    organization_id = Column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    competitor_name = Column(String(255), nullable=False)
+    domain = Column(String(255), nullable=True)
+    observed_tenders_count = Column(Integer, default=0, nullable=False)
+    estimated_win_rate = Column(Float, default=0.0, nullable=False)
+    key_strengths = Column(JSON, default=list, nullable=False)
+    known_weaknesses = Column(JSON, default=list, nullable=False)
+    pricing_strategy_notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    __table_args__ = (
+        Index("ix_competitor_org_name", "organization_id", "competitor_name", unique=True),
+    )
+
+
+class BidSubmissionRecord(Base):
+    __tablename__ = "bid_submission_records"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    tender_id = Column(String(36), ForeignKey("tenders.id", ondelete="CASCADE"), nullable=False)
+    organization_id = Column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    lifecycle_stage = Column(String(64), default="submitted_to_buyer", nullable=False)
+    submission_reference = Column(String(255), nullable=False)
+    submitted_by_user_id = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    submitted_at = Column(DateTime, default=utcnow, nullable=False)
+    final_bid_amount = Column(Float, nullable=False)
+    currency = Column(String(10), default="USD", nullable=False)
+    submission_receipt_hash = Column(String(64), nullable=False)
+    verification_status = Column(String(64), default="submitted", nullable=False)
+    notes = Column(Text, nullable=True)
+
+    outcome = relationship("BidOutcomeRecord", uselist=False, back_populates="submission", cascade="all, delete-orphan")
+
+
+class BidOutcomeRecord(Base):
+    __tablename__ = "bid_outcome_records"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    submission_id = Column(String(36), ForeignKey("bid_submission_records.id", ondelete="CASCADE"), nullable=False, unique=True)
+    tender_id = Column(String(36), ForeignKey("tenders.id", ondelete="CASCADE"), nullable=False)
+    organization_id = Column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    outcome = Column(String(64), nullable=False)  # won, lost, cancelled
+    winning_bidder = Column(String(255), nullable=True)
+    winning_amount = Column(Float, nullable=True)
+    our_score = Column(Float, nullable=True)
+    winning_score = Column(Float, nullable=True)
+    primary_loss_reason = Column(String(128), nullable=True)
+    debrief_notes = Column(Text, nullable=True)
+    win_factors = Column(JSON, default=list, nullable=False)
+    recorded_at = Column(DateTime, default=utcnow, nullable=False)
+
+    submission = relationship("BidSubmissionRecord", back_populates="outcome")
+
+
+class KnowledgeAsset(Base):
+    __tablename__ = "knowledge_assets"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    organization_id = Column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    title = Column(String(512), nullable=False)
+    category = Column(String(128), default="technical_approach", nullable=False)  # technical_approach, executive_summary, compliance_boilerplate, team_cv, methodology
+    asset_type = Column(String(64), default="text", nullable=False)
+    content = Column(Text, nullable=False)
+    plain_text = Column(Text, nullable=True)
+    keywords = Column(JSON, default=list, nullable=False)
+    author_user_id = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    review_status = Column(String(64), default="approved", nullable=False)  # draft, under_review, approved, deprecated
+    approved_by_user_id = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    approved_at = Column(DateTime, nullable=True)
+    times_reused = Column(Integer, default=0, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    versions = relationship("KnowledgeAssetVersion", back_populates="asset", cascade="all, delete-orphan")
+
+
+class KnowledgeAssetVersion(Base):
+    __tablename__ = "knowledge_asset_versions"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    asset_id = Column(String(36), ForeignKey("knowledge_assets.id", ondelete="CASCADE"), nullable=False)
+    version_number = Column(Integer, default=1, nullable=False)
+    content = Column(Text, nullable=False)
+    change_summary = Column(String(512), nullable=True)
+    modified_by_user_id = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+    asset = relationship("KnowledgeAsset", back_populates="versions")
+
+
+
 
 

@@ -67,44 +67,45 @@ def verify_role_permission(
 
 def get_current_user_claims(
     authorization: Optional[str] = Header(None),
-    x_user_role: Optional[str] = Header(None, alias="X-User-Role"),
-    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
 ) -> dict:
-    """Extract authenticated user claims from Authorization header or fallback headers."""
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization.split(" ", 1)[1].strip()
-        payload = decode_access_token(token)
-        if payload:
-            return {
-                "user_id": payload.get("sub"),
-                "email": payload.get("email"),
-                "role": payload.get("role", "Author"),
-                "org_id": payload.get("org_id", settings.default_organization_id),
-            }
+    """Extract authenticated user claims from Authorization Bearer JWT header.
+    
+    The browser or API client must supply a valid signed JWT access token.
+    Client-supplied X-User-Role and X-User-Id headers are untrusted and rejected.
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication token required. Please sign in.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-    # Fallback for API integration testing / scripts
-    user_id = x_user_id or "usr-system-admin"
-    role = x_user_role or "Admin"
+    token = authorization.split(" ", 1)[1].strip()
+    payload = decode_access_token(token)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired access token.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     return {
-        "user_id": user_id,
-        "email": "admin@tenderforge.local",
-        "role": role,
-        "org_id": settings.default_organization_id,
+        "user_id": payload.get("sub"),
+        "email": payload.get("email"),
+        "role": payload.get("role", "Viewer"),
+        "org_id": payload.get("org_id", settings.default_organization_id),
     }
 
 
 def require_role(required_role: Role):
-    """FastAPI dependency to enforce minimum role authorization via JWT Bearer or X-User-Role header."""
+    """FastAPI dependency to enforce minimum role authorization via verified JWT Bearer token."""
     def dependency(
         authorization: Optional[str] = Header(None),
-        x_user_role: Optional[str] = Header(None, alias="X-User-Role"),
-        x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
     ) -> str:
         if not settings.rbac_config.get("enabled", True):
             return "Admin"
 
-        # Check token claims first
-        claims = get_current_user_claims(authorization, x_user_role, x_user_id)
+        claims = get_current_user_claims(authorization)
         role_str = claims.get("role", "Viewer")
 
         if not verify_role_permission(role_str, required_role):

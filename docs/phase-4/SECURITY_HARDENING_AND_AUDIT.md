@@ -41,3 +41,4 @@ All responses emitted by FastAPI pass through `SecurityHeadersMiddleware`, injec
 | **Cryptographic Failures** | Weak hashing or plain reset tokens | bcrypt password hashing; SHA-256 token hashing; HS256 JWT signatures. |
 | **SSRF** | Server fetches malicious internal URLs | Document upload restricted to local multipart files or authorized object storage buckets. |
 | **Path Traversal** | Malicious filename `../../etc/passwd` | Filenames sanitized via `Path(name).name`; relative storage paths resolved with strict jail check. |
+

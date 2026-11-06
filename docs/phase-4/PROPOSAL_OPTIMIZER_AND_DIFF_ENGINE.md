@@ -57,3 +57,4 @@ The enterprise frontend incorporates an inline diff engine comparing:
 - Revisions are never committed automatically to the final proposal bundle.
 - Acceptance requires explicit human review and click-through approval from a user possessing the `proposal_writer`, `bid_manager`, or `admin` role.
 - All diffs and acceptance decisions are permanently recorded in the immutable audit log.
+

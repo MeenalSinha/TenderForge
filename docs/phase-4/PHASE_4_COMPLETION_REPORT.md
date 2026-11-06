@@ -68,3 +68,4 @@ TenderForge represents the premier entry for the **Best Business Workflow** trac
 3. **Anti-Hallucination ProofLink Innovation**: Introduces cryptographic proof links connecting proposal text directly to verified corporate source documents.
 4. **Human-in-the-Loop Governance**: AI recommendations are strictly advisory; high-stakes decisions (bid/no-bid gating, financial release, contradiction resolution) require authorized human sign-off.
 5. **Turnkey Production Execution**: Ready for immediate evaluation via Docker Compose or single-command local launch.
+

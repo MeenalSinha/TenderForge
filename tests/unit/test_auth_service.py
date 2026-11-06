@@ -143,3 +143,4 @@ def test_organization_and_team_management(db_session):
         user_id=member["user_id"],
     )
     assert removed is True
+

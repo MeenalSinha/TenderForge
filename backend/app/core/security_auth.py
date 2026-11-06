@@ -82,3 +82,19 @@ def generate_secure_token(nbytes: int = 32) -> str:
 def hash_token(token: str) -> str:
     """Compute a SHA-256 hash of a token for secure database indexing."""
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def create_test_token(
+    role: str = "Admin",
+    user_id: str = "usr-test-admin",
+    email: str = "admin@tenderforge.local",
+    org_id: Optional[str] = None,
+) -> str:
+    """Convenience helper to create a signed test JWT token for automated tests."""
+    return create_access_token({
+        "sub": user_id,
+        "email": email,
+        "role": role,
+        "org_id": org_id or settings.default_organization_id,
+    })
+

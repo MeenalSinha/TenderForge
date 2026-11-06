@@ -61,3 +61,4 @@ The Risk Engine scans ingested tender specifications across 5 operational domain
 - **Mitigate**: Implement specific technical or contractual safeguards (e.g., submit formal tender query/clarification).
 - **Transfer**: Subcontract high-risk scope or secure third-party performance underwriting.
 - **Avoid**: Propose alternative compliance deviation or decline tender submission.
+

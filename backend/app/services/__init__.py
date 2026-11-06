@@ -21,6 +21,13 @@ from backend.app.services.proposal_revision_service import ProposalRevisionServi
 from backend.app.services.portfolio_service import PortfolioService
 from backend.app.services.deadline_service import DeadlineService
 from backend.app.services.analytics_service import AnalyticsService
+from backend.app.services.opportunity_service import OpportunityService
+from backend.app.services.opportunity_matching_service import OpportunityMatchingService
+from backend.app.services.tender_monitoring_service import TenderMonitoringService
+from backend.app.services.amendment_service import AmendmentService
+from backend.app.services.market_intelligence_service import MarketIntelligenceService
+from backend.app.services.bid_outcome_service import BidOutcomeService
+from backend.app.services.knowledge_library_service import KnowledgeLibraryService
 
 __all__ = [
     "DocumentService",
@@ -46,6 +53,13 @@ __all__ = [
     "PortfolioService",
     "DeadlineService",
     "AnalyticsService",
+    "OpportunityService",
+    "OpportunityMatchingService",
+    "TenderMonitoringService",
+    "AmendmentService",
+    "MarketIntelligenceService",
+    "BidOutcomeService",
+    "KnowledgeLibraryService",
 ]
 
 

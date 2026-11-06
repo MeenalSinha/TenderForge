@@ -326,6 +326,67 @@ TOOLS_REGISTRY: List[Dict[str, Any]] = [
             "required": ["workspace_id"],
         },
     },
+    {
+        "name": "discover_opportunities",
+        "description": "Discover procurement opportunities across connected sources with filters.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "organization_id": {"type": "string", "description": "Organization ID"},
+                "category": {"type": "string", "description": "Procurement sector/category"},
+                "search": {"type": "string", "description": "Keyword search query"},
+            },
+            "required": ["organization_id"],
+        },
+    },
+    {
+        "name": "match_opportunity",
+        "description": "Calculate 9-dimension explainable match score between organization profile and an opportunity.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "opportunity_id": {"type": "string", "description": "Opportunity ID"},
+                "organization_id": {"type": "string", "description": "Organization ID"},
+            },
+            "required": ["opportunity_id", "organization_id"],
+        },
+    },
+    {
+        "name": "check_tender_amendments",
+        "description": "List corrigenda, clause diffs, and downstream impact analysis for a monitored tender.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "tender_id": {"type": "string", "description": "Tender ID"},
+            },
+            "required": ["tender_id"],
+        },
+    },
+    {
+        "name": "query_market_awards",
+        "description": "Query verified public contract awards, winning bidders, and price benchmarks.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "organization_id": {"type": "string", "description": "Organization ID"},
+                "category": {"type": "string", "description": "Category filter"},
+            },
+            "required": ["organization_id"],
+        },
+    },
+    {
+        "name": "search_knowledge_assets",
+        "description": "Search verified proposal narrative assets, methodology boilerplate, and CVs.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "organization_id": {"type": "string", "description": "Organization ID"},
+                "category": {"type": "string", "description": "Asset category"},
+                "query": {"type": "string", "description": "Search query"},
+            },
+            "required": ["organization_id"],
+        },
+    },
 ]
 
 

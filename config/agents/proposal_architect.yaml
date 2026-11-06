@@ -16,6 +16,7 @@ permitted_tools:
   - "create_proposal_draft"
   - "get_proposal_revision"
   - "request_human_review"
+  - "search_knowledge_assets"
 collaboration:
   triggers:
     - "compliance.evaluation_completed"

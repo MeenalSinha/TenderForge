@@ -83,3 +83,4 @@ Before a submission release package can be compiled:
 | `POST` | `/api/v1/proposals/{id}/release` | Trigger release packaging and generate sealed ZIP archive |
 | `GET` | `/api/v1/proposals/{id}/manifest` | Retrieve cryptographic manifest and SHA-256 hashes |
 | `GET` | `/api/v1/proposals/{id}/download` | Download complete submission release bundle |
+

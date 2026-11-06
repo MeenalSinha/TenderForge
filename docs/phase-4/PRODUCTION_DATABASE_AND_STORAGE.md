@@ -82,3 +82,4 @@ The database lifecycle is governed strictly by version-controlled Alembic migrat
 - `002_phase2_switch_agents.py`: Agent execution records, Switch room mappings, audit events.
 - `003_phase3_advanced_intelligence.py`: Viability radar, financial BOQ items, 5x5 risks, milestones.
 - `004_phase4_auth_models.py`: Enterprise users, organization memberships, sessions, password resets.
+

@@ -41,6 +41,11 @@ from backend.app.services.risk_service import RiskService
 from backend.app.services.proposal_optimization_service import ProposalOptimizationService
 from backend.app.services.proposal_revision_service import ProposalRevisionService
 from backend.app.services.portfolio_service import PortfolioService
+from backend.app.services.opportunity_service import OpportunityService
+from backend.app.services.opportunity_matching_service import OpportunityMatchingService
+from backend.app.services.amendment_service import AmendmentService
+from backend.app.services.market_intelligence_service import MarketIntelligenceService
+from backend.app.services.knowledge_library_service import KnowledgeLibraryService
 
 logger = get_logger("tool_handlers")
 
@@ -66,6 +71,11 @@ class ToolDispatcher:
         self.opt_service = ProposalOptimizationService()
         self.revision_service = ProposalRevisionService()
         self.portfolio_service = PortfolioService()
+        self.opp_service = OpportunityService()
+        self.match_service = OpportunityMatchingService()
+        self.amendment_service = AmendmentService()
+        self.market_service = MarketIntelligenceService()
+        self.knowledge_service = KnowledgeLibraryService()
 
     def execute(
         self,
@@ -499,6 +509,111 @@ class ToolDispatcher:
             db=db,
         )
         return {"status": "success", **overview}
+
+    def _tool_discover_opportunities(self, db: Session, args: Dict[str, Any], caller_id: str) -> Dict[str, Any]:
+        opps, total = self.opp_service.list_opportunities(
+            db=db,
+            organization_id=args["organization_id"],
+            category=args.get("category"),
+            search=args.get("search"),
+            limit=20,
+        )
+        return {
+            "status": "success",
+            "total": total,
+            "opportunities": [
+                {
+                    "id": o.id,
+                    "title": o.title,
+                    "buyer_name": o.buyer_name,
+                    "category": o.procurement_category,
+                    "estimated_budget": o.estimated_budget,
+                    "currency": o.currency,
+                    "submission_deadline": o.submission_deadline.isoformat() if o.submission_deadline else None,
+                }
+                for o in opps
+            ],
+        }
+
+    def _tool_match_opportunity(self, db: Session, args: Dict[str, Any], caller_id: str) -> Dict[str, Any]:
+        match = self.match_service.evaluate_opportunity(
+            db=db,
+            opportunity_id=args["opportunity_id"],
+            organization_id=args["organization_id"],
+        )
+        return {
+            "status": "success",
+            "overall_match_score": match.overall_match_score,
+            "recommendation_tier": match.recommendation_tier,
+            "mandatory_gates_passed": match.mandatory_gates_passed,
+            "dimension_scores": match.dimension_scores,
+            "explainability": match.explainability_breakdown,
+        }
+
+    def _tool_check_tender_amendments(self, db: Session, args: Dict[str, Any], caller_id: str) -> Dict[str, Any]:
+        amendments = self.amendment_service.list_amendments(db=db, tender_id=args["tender_id"])
+        return {
+            "status": "success",
+            "amendments_count": len(amendments),
+            "amendments": [
+                {
+                    "id": a.id,
+                    "amendment_number": a.amendment_number,
+                    "title": a.title,
+                    "materiality": a.materiality,
+                    "approval_invalidated": a.approval_invalidated,
+                    "publication_date": a.publication_date.isoformat(),
+                }
+                for a in amendments
+            ],
+        }
+
+    def _tool_query_market_awards(self, db: Session, args: Dict[str, Any], caller_id: str) -> Dict[str, Any]:
+        awards, total = self.market_service.list_awards(
+            db=db,
+            organization_id=args["organization_id"],
+            category=args.get("category"),
+            limit=15,
+        )
+        return {
+            "status": "success",
+            "total_observed": total,
+            "awards": [
+                {
+                    "tender_reference": a.tender_reference,
+                    "buyer_name": a.buyer_name,
+                    "winning_bidder": a.winning_bidder,
+                    "award_amount": a.award_amount,
+                    "currency": a.currency,
+                    "award_date": a.award_date.isoformat(),
+                }
+                for a in awards
+            ],
+        }
+
+    def _tool_search_knowledge_assets(self, db: Session, args: Dict[str, Any], caller_id: str) -> Dict[str, Any]:
+        assets, total = self.knowledge_service.list_assets(
+            db=db,
+            organization_id=args["organization_id"],
+            category=args.get("category"),
+            search=args.get("query"),
+            review_status="approved",
+            limit=10,
+        )
+        return {
+            "status": "success",
+            "total_matching": total,
+            "assets": [
+                {
+                    "id": a.id,
+                    "title": a.title,
+                    "category": a.category,
+                    "snippet": a.plain_text,
+                    "times_reused": a.times_reused,
+                }
+                for a in assets
+            ],
+        }
 
 
 # Global tool dispatcher

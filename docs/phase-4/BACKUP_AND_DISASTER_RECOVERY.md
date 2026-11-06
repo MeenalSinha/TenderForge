@@ -69,3 +69,4 @@ python scripts/restore_db.py --archive backups/production_20261105.tar.gz --veri
 ## 4. Recovery Time & Point Objectives (RTO / RPO)
 - **Recovery Point Objective (RPO)**: $\le 1$ hour (hourly WAL archiving and daily automated backup cron).
 - **Recovery Time Objective (RTO)**: $\le 15$ minutes (automated container restoration via Docker Compose).
+

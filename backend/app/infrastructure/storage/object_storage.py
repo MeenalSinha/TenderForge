@@ -192,3 +192,4 @@ def get_storage_provider() -> BaseStorageProvider:
     if provider_name in ("s3", "minio", "gcs"):
         return S3CompatibleStorageProvider()
     return LocalStorageProvider()
+

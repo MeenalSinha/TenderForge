@@ -15,6 +15,9 @@ permitted_tools:
   - "audit_proposal"
   - "get_audit_report"
   - "request_human_review"
+  - "query_market_awards"
+  - "match_opportunity"
+  - "check_tender_amendments"
 collaboration:
   triggers:
     - "proposal.draft_ready"

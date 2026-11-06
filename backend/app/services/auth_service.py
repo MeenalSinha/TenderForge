@@ -294,3 +294,4 @@ class AuthService:
     @staticmethod
     def get_user_by_email(db: Session, email: str) -> Optional[User]:
         return db.execute(select(User).where(User.email == email.lower().strip())).scalar_one_or_none()
+

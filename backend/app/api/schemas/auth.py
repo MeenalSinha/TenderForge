@@ -96,3 +96,4 @@ class OrganizationMemberResponse(BaseModel):
     role: str
     invited_by: Optional[str] = None
     created_at: datetime
+

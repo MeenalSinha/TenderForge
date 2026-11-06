@@ -88,3 +88,4 @@ def downgrade() -> None:
     op.drop_table('organization_members')
     op.drop_index('ix_users_email', table_name='users')
     op.drop_table('users')
+

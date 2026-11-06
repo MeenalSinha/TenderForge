@@ -61,6 +61,10 @@ class Settings(BaseSettings):
     CONFIG_PATH_BID_EVAL: str = "./config/bid_evaluation.yaml"
     CONFIG_PATH_FINANCIAL: str = "./config/financial_policies.yaml"
     CONFIG_PATH_RISK_MATRIX: str = "./config/risk_matrix.yaml"
+    CONFIG_PATH_PROCUREMENT_SOURCES: str = "./config/procurement_sources.yaml"
+    CONFIG_PATH_OPP_MATCHING: str = "./config/opportunity_matching.yaml"
+    CONFIG_PATH_MONITORING: str = "./config/monitoring_policies.yaml"
+    CONFIG_PATH_MARKET_INTEL: str = "./config/market_intelligence.yaml"
     PROMPTS_DIR: str = "./config/prompts"
 
     # AI Provider
@@ -79,11 +83,36 @@ class Settings(BaseSettings):
     _bid_eval_yaml: Dict[str, Any] = {}
     _financial_yaml: Dict[str, Any] = {}
     _risk_matrix_yaml: Dict[str, Any] = {}
+    _procurement_sources_yaml: Dict[str, Any] = {}
+    _opp_matching_yaml: Dict[str, Any] = {}
+    _monitoring_yaml: Dict[str, Any] = {}
+    _market_intel_yaml: Dict[str, Any] = {}
 
     def model_post_init(self, __context: Any) -> None:
         """Load external YAML files and verify critical paths."""
         self._load_yaml_configs()
         self._ensure_storage_directories()
+        self._validate_production_secrets()
+
+    def _validate_production_secrets(self) -> None:
+        """Enforce strict production secret policies."""
+        if self.ENVIRONMENT.lower() == "production":
+            insecure_defaults = [
+                "tenderforge-enterprise-secret-key-change-in-production-2026",
+                "tenderforge-production-master-secret-key-2026",
+                "secret",
+                "changeme",
+            ]
+            if not self.JWT_SECRET_KEY or self.JWT_SECRET_KEY in insecure_defaults or len(self.JWT_SECRET_KEY) < 32:
+                raise ValueError(
+                    "CRITICAL PRODUCTION SECURITY ERROR: Insecure or default JWT_SECRET_KEY detected in production environment. "
+                    "You must provide a cryptographically strong JWT_SECRET_KEY (at least 32 characters) via environment variable."
+                )
+            if "tenderforge_secure_password_2026" in self.DATABASE_URL:
+                raise ValueError(
+                    "CRITICAL PRODUCTION SECURITY ERROR: Default database credentials detected in DATABASE_URL in production environment. "
+                    "You must set a secure production database password via POSTGRES_PASSWORD and DATABASE_URL."
+                )
 
     def _load_yaml_configs(self) -> None:
         app_path = Path(self.CONFIG_PATH_APP)
@@ -110,6 +139,26 @@ class Settings(BaseSettings):
         if risk_path.exists():
             with open(risk_path, "r", encoding="utf-8") as f:
                 self._risk_matrix_yaml = yaml.safe_load(f) or {}
+
+        src_path = Path(self.CONFIG_PATH_PROCUREMENT_SOURCES)
+        if src_path.exists():
+            with open(src_path, "r", encoding="utf-8") as f:
+                self._procurement_sources_yaml = yaml.safe_load(f) or {}
+
+        match_path = Path(self.CONFIG_PATH_OPP_MATCHING)
+        if match_path.exists():
+            with open(match_path, "r", encoding="utf-8") as f:
+                self._opp_matching_yaml = yaml.safe_load(f) or {}
+
+        mon_path = Path(self.CONFIG_PATH_MONITORING)
+        if mon_path.exists():
+            with open(mon_path, "r", encoding="utf-8") as f:
+                self._monitoring_yaml = yaml.safe_load(f) or {}
+
+        market_path = Path(self.CONFIG_PATH_MARKET_INTEL)
+        if market_path.exists():
+            with open(market_path, "r", encoding="utf-8") as f:
+                self._market_intel_yaml = yaml.safe_load(f) or {}
 
     def _ensure_storage_directories(self) -> None:
         Path(self.STORAGE_ROOT).mkdir(parents=True, exist_ok=True)
@@ -189,6 +238,22 @@ class Settings(BaseSettings):
     @property
     def deadlines_config(self) -> Dict[str, Any]:
         return self._app_yaml.get("deadlines", {})
+
+    @property
+    def procurement_sources_config(self) -> Dict[str, Any]:
+        return self._procurement_sources_yaml.get("procurement_sources", {})
+
+    @property
+    def opportunity_matching_config(self) -> Dict[str, Any]:
+        return self._opp_matching_yaml.get("opportunity_matching", {})
+
+    @property
+    def monitoring_policies_config(self) -> Dict[str, Any]:
+        return self._monitoring_yaml.get("monitoring_policies", {})
+
+    @property
+    def market_intelligence_config(self) -> Dict[str, Any]:
+        return self._market_intel_yaml.get("market_intelligence", {})
 
     @property
     def is_ai_configured(self) -> bool:

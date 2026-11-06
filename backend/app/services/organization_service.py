@@ -231,3 +231,4 @@ class OrganizationService:
         db.commit()
         logger.info(f"Removed member '{user_id}' from organization '{org_id}'")
         return True
+

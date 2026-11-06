@@ -46,3 +46,4 @@ if __name__ == "__main__":
     archive = sys.argv[1]
     target = sys.argv[2] if len(sys.argv) > 2 else "."
     restore_backup(archive, target)
+

@@ -127,3 +127,4 @@ docker-compose exec backend alembic -c backend/alembic.ini upgrade head
 # 4. Access the application
 # Frontend SPA & API: http://localhost:80
 ```
+

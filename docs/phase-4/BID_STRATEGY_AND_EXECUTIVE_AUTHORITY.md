@@ -58,3 +58,4 @@ The following non-compensable gates trigger an automatic `NO-BID RECOMMENDED` or
   - Requires entering a mandatory justification narrative (minimum 25 characters).
   - Must specify compensating factors (e.g., "Subcontracting specialist partner to satisfy ISO 27001 requirement").
   - The override event, user identity, timestamp, and justification are permanently sealed in the immutable audit log.
+

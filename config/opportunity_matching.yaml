@@ -1,0 +1,112 @@
+# ==============================================================================
+# TenderForge Opportunity Matching & Explainability Engine Configuration
+# ==============================================================================
+opportunity_matching:
+  algorithm_version: "v5.0-explainable-multi-factor"
+  advisory_notice: "AI-generated match scores and recommendations are strictly advisory. Final pursuit authorization rests with authorized human bid executives."
+
+  # Non-Compensable Hard Eligibility Gates
+  # If any of these mandatory criteria fail, overall eligibility is overridden to FAIL
+  # and the match score is flagged with severe warnings or capped.
+  hard_eligibility_gates:
+    strict_enforcement: true
+    mandatory_criteria:
+      - id: "statutory_compliance"
+        label: "Statutory Incorporation & Registration"
+        description: "Organization must be legally incorporated and in good statutory standing."
+      - id: "mandatory_certifications"
+        label: "Mandatory Certifications (ISO, Security, Industry)"
+        description: "Must possess all strict non-negotiable certifications required by the buyer."
+      - id: "minimum_financial_turnover"
+        label: "Minimum Annual Turnover Threshold"
+        description: "Turnover must equal or exceed the minimum threshold specified in tender notice."
+      - id: "debarment_status"
+        label: "Non-Blacklisted / Debarment Verification"
+        description: "Organization must have no active debarment or disqualification orders."
+
+  # 9-Dimension Scoring Weights (Must sum to 1.0)
+  dimensions:
+    mandatory_eligibility:
+      id: "mandatory_eligibility"
+      label: "Mandatory Eligibility & Gate Compliance"
+      weight: 0.20
+      is_hard_gate: true
+      description: "Pass/Fail evaluation against statutory, debarment, and mandatory criteria."
+
+    technical_capability:
+      id: "technical_capability"
+      label: "Technical Capability & Scope Alignment"
+      weight: 0.18
+      is_hard_gate: false
+      description: "Degree of overlap between buyer specifications and organization core capabilities."
+
+    past_performance:
+      id: "past_performance"
+      label: "Past Performance & Track Record"
+      weight: 0.14
+      is_hard_gate: false
+      description: "Proven completion of similar scope, value, and client type within past 5 years."
+
+    financial_capacity:
+      id: "financial_capacity"
+      label: "Financial Standing & Working Capital"
+      weight: 0.12
+      is_hard_gate: false
+      description: "Adequacy of turnover, net worth, cash reserves, and bonding capacity."
+
+    resource_availability:
+      id: "resource_availability"
+      label: "Resource & Staffing Availability"
+      weight: 0.10
+      is_hard_gate: false
+      description: "Current capacity of personnel, equipment, and key experts for mobilization."
+
+    geographic_alignment:
+      id: "geographic_alignment"
+      label: "Geographic Location & Delivery Footprint"
+      weight: 0.08
+      is_hard_gate: false
+      description: "Operational presence or partner network in the tender performance territory."
+
+    client_relationship_history:
+      id: "client_relationship_history"
+      label: "Client Relationship & Procurement History"
+      weight: 0.06
+      is_hard_gate: false
+      description: "Historical track record, ratings, or past contract delivery with this authority."
+
+    strategic_fit:
+      id: "strategic_fit"
+      label: "Strategic Alignment & Growth Objective"
+      weight: 0.06
+      is_hard_gate: false
+      description: "Alignment with corporate target sectors, priority accounts, and strategic roadmap."
+
+    risk_reward_balance:
+      id: "risk_reward_balance"
+      label: "Risk Profile vs Contract Margin"
+      weight: 0.06
+      is_hard_gate: false
+      description: "Penalty structures, indemnity caps, payment terms vs estimated project margin."
+
+  # Recommendation Tier Thresholds
+  thresholds:
+    high_match:
+      min_score: 75.0
+      label: "STRONGLY RECOMMENDED"
+      summary: "High capability, past performance, and compliance alignment. Prime pursuit opportunity."
+    moderate_match:
+      min_score: 55.0
+      label: "RECOMMENDED WITH CONDITIONS"
+      summary: "Viable opportunity with specific capability gaps or partnering requirements."
+    low_match:
+      min_score: 0.0
+      label: "PURSUIT NOT RECOMMENDED"
+      summary: "Significant capability gaps, high risk profile, or failed mandatory eligibility criteria."
+
+  explainability:
+    max_strengths: 5
+    max_weaknesses: 5
+    max_uncertainties: 5
+    highlight_missing_evidence: true
+

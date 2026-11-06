@@ -1,0 +1,50 @@
+# ==============================================================================
+# TenderForge Procurement Market Analytics & Closed-Loop Learning Configuration
+# ==============================================================================
+market_intelligence:
+  enabled: true
+  aggregation_windows_days: [30, 90, 180, 365]
+
+  # Closed-Loop Bid Learning Constraints
+  learning_engine:
+    # Strict minimum threshold before computing statistical patterns or win rates
+    min_sample_size_for_statistical_projection: 5
+    fallback_message: "Insufficient sample size (N < 5) to project statistically reliable win patterns."
+    enable_loss_reason_clustering: true
+    enable_win_factor_attribution: true
+
+    # Lifecycle Stage Definitions (14 Stages)
+    lifecycle_stages:
+      - "identified"
+      - "evaluating_opportunity"
+      - "bid_approved"
+      - "no_bid_archived"
+      - "team_mobilized"
+      - "compliance_underway"
+      - "proposal_drafting"
+      - "internal_review"
+      - "final_executive_signoff"
+      - "submitted_to_buyer"
+      - "clarification_phase"
+      - "under_buyer_evaluation"
+      - "awarded_won"
+      - "lost_or_cancelled"
+
+    # Common Loss and Win Taxonomy
+    loss_reasons:
+      - "pricing_uncompetitive"
+      - "technical_score_lower"
+      - "eligibility_non_compliance"
+      - "past_performance_deficiency"
+      - "delivery_timeline_too_long"
+      - "incomplete_documentation"
+      - "competitor_incumbent_advantage"
+      - "tender_cancelled_by_buyer"
+
+  # Public Award and Competitor Tracking Boundaries
+  data_integrity:
+    zero_fabrication: true
+    require_source_provenance: true
+    private_competitor_observations_only: true
+    allow_cross_tenant_aggregation: false # Strict tenant isolation
+

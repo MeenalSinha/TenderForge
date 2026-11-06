@@ -17,6 +17,12 @@ from backend.app.api.routes.analytics import router as analytics_router
 from backend.app.api.routes.optimizations import router as optimizations_router
 from backend.app.api.routes.auth import router as auth_router
 from backend.app.api.routes.organizations import router as organizations_router
+from backend.app.api.routes.procurement_sources import router as sources_router
+from backend.app.api.routes.opportunities import router as opportunities_router
+from backend.app.api.routes.monitoring import router as monitoring_router
+from backend.app.api.routes.market import router as market_router
+from backend.app.api.routes.bid_outcomes import router as bid_outcomes_router
+from backend.app.api.routes.knowledge import router as knowledge_router
 
 __all__ = [
     "health_router",
@@ -37,4 +43,10 @@ __all__ = [
     "optimizations_router",
     "auth_router",
     "organizations_router",
+    "sources_router",
+    "opportunities_router",
+    "monitoring_router",
+    "market_router",
+    "bid_outcomes_router",
+    "knowledge_router",
 ]

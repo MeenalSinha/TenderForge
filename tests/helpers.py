@@ -54,3 +54,15 @@ def create_synthetic_docx_bytes() -> bytes:
     doc.save(buf)
     return buf.getvalue()
 
+
+def run_sync(coro):
+    """
+    Safely executes a coroutine synchronously without event loop deadlocks
+    on Windows in Python 3.14.
+    """
+    try:
+        return coro.send(None)
+    except StopIteration as e:
+        return e.value
+
+

@@ -33,6 +33,12 @@ from backend.app.api.routes import (
     optimizations_router,
     auth_router,
     organizations_router,
+    sources_router,
+    opportunities_router,
+    monitoring_router,
+    market_router,
+    bid_outcomes_router,
+    knowledge_router,
 )
 from backend.app.api.schemas.common import ErrorDetail, ResponseEnvelope
 from backend.app.core.config import settings
@@ -197,6 +203,12 @@ def create_app() -> FastAPI:
     app.include_router(deadlines_router, prefix=settings.API_V1_PREFIX)
     app.include_router(analytics_router, prefix=settings.API_V1_PREFIX)
     app.include_router(optimizations_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(sources_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(opportunities_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(monitoring_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(market_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(bid_outcomes_router, prefix=settings.API_V1_PREFIX)
+    app.include_router(knowledge_router, prefix=settings.API_V1_PREFIX)
 
     # 4. Optional Static Assets & SPA Routing for Enterprise Frontend
     dist_dir = Path("frontend/dist")

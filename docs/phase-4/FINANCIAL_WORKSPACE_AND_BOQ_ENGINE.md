@@ -65,3 +65,4 @@ The workspace enables bid managers to evaluate 3 real-time commercial scenarios:
 ## 5. Export Formats
 - Structured financial tables export directly to standard Microsoft Excel (`.xlsx`) workbooks featuring live formulas (`=SUM()`, `=PRODUCT()`) rather than static pasted strings.
 - Complete snapshot exported to the tender deliverables release archive.
+

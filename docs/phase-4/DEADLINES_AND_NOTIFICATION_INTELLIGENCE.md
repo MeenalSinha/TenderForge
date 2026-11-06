@@ -49,3 +49,4 @@ When a tender document is parsed, the engine identifies and schedules the critic
 ## 4. Multi-Agent & Switch Notification Relay
 - **Switch War Room Event Push**: Milestone status transitions broadcast automatic notification alerts into the active Switch collaboration room.
 - **Agent Task Acceleration**: When time delta reaches `< 72 hours`, agents prioritize remaining incomplete sections and unresolved compliance items over optional styling enhancements.
+

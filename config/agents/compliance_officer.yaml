@@ -13,6 +13,8 @@ permitted_tools:
   - "evaluate_compliance"
   - "get_compliance_matrix"
   - "request_human_review"
+  - "check_tender_amendments"
+  - "search_knowledge_assets"
 collaboration:
   triggers:
     - "analyst.analysis_completed"

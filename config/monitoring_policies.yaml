@@ -1,0 +1,56 @@
+# ==============================================================================
+# TenderForge Tender Monitoring & Amendment Intelligence Configuration
+# ==============================================================================
+monitoring_policies:
+  enabled: true
+  default_check_frequency_minutes: 60
+  max_subscriptions_per_organization: 100
+  snapshot_retention_days: 365
+
+  # Materiality Classification Rules
+  materiality_classification:
+    critical:
+      label: "Critical Material Change"
+      triggers:
+        - "submission_deadline_extended"
+        - "submission_deadline_shortened"
+        - "budget_ceiling_altered"
+        - "mandatory_eligibility_altered"
+        - "boq_structure_changed"
+        - "emdn_or_security_deposit_revised"
+      requires_approval_invalidation: true
+      notification_priority: "urgent"
+      description: "Directly affects legality, pricing, eligibility, or submission viability."
+
+    major:
+      label: "Major Scope or Technical Revision"
+      triggers:
+        - "technical_specification_revised"
+        - "sla_or_penalty_clause_added"
+        - "deliverable_milestones_adjusted"
+        - "evaluation_criteria_weight_changed"
+      requires_approval_invalidation: false
+      requires_reassessment_flag: true
+      notification_priority: "high"
+      description: "Requires updating proposal technical design, schedule, or compliance statements."
+
+    minor:
+      label: "Minor Clarification or Administrative Notice"
+      triggers:
+        - "corrigendum_typo_fix"
+        - "clarification_qa_published"
+        - "contact_person_updated"
+        - "portal_url_corrected"
+      requires_approval_invalidation: false
+      requires_reassessment_flag: false
+      notification_priority: "normal"
+      description: "Informational or administrative updates without contractual or scope impact."
+
+  # Downstream Impact Propagation
+  impact_propagation:
+    auto_tag_affected_requirements: true
+    auto_tag_affected_compliance: true
+    auto_tag_affected_claims: true
+    auto_tag_affected_boq: true
+    require_explicit_reacknowledgement: true
+

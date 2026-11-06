@@ -7,9 +7,9 @@ services:
     container_name: tenderforge_db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: tenderforge
-      POSTGRES_PASSWORD: tenderforge_secure_password_2026
-      POSTGRES_DB: tenderforge_db
+      POSTGRES_USER: ${POSTGRES_USER:-tenderforge}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Error: POSTGRES_PASSWORD environment variable is required}
+      POSTGRES_DB: ${POSTGRES_DB:-tenderforge_db}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -36,8 +36,8 @@ services:
     environment:
       ENVIRONMENT: production
       APP_NAME: TenderForge
-      DATABASE_URL: postgresql://tenderforge:tenderforge_secure_password_2026@db:5432/tenderforge_db
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-tenderforge-production-master-secret-key-2026}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-tenderforge}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-tenderforge_db}}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Error: JWT_SECRET_KEY environment variable is required}
       JWT_ACCESS_TOKEN_EXPIRE_MINUTES: 1440
       BCRYPT_ROUNDS: 12
       STORAGE_ROOT: /app/storage
@@ -87,3 +87,4 @@ networks:
   tenderforge_net:
     name: tenderforge_network
     driver: bridge
+

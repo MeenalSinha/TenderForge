@@ -188,3 +188,4 @@ def remove_member(
         data={"removed": True},
         correlation_id=correlation_id_ctx.get(),
     )
+

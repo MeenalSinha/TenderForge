@@ -99,3 +99,4 @@ CREATE INDEX ix_user_sessions_jti ON user_sessions(token_jti);
 2. **Token Hash Storage**: Password reset tokens are generated as high-entropy 32-byte URL-safe strings; only the SHA-256 digest is stored in the database.
 3. **Automatic Single-Use Invalidation**: Reset tokens are marked `is_used = True` upon successful password modification.
 4. **Rate Limiting**: Configured to restrict authentication endpoints to 30 requests per minute per IP address.
+

@@ -66,3 +66,4 @@ The application provides 15 dedicated operational views covering the complete bi
 - **Color Palette**: Slate and zinc backgrounds (`bg-slate-900`, `bg-slate-800`), indigo brand accents (`indigo-600`), emerald success badges (`emerald-400`), amber warning indicators (`amber-400`), and rose critical flags (`rose-400`).
 - **Typography**: Inter / system font stack with strict typographic hierarchy.
 - **Responsiveness**: Fluid layout with responsive sidebar toggling, horizontal table scrolling, and accessible modal backdrops.
+

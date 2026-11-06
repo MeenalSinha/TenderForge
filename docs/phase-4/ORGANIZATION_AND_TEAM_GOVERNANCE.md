@@ -75,3 +75,4 @@ CREATE INDEX ix_org_members_org ON organization_members(organization_id);
 1. **Tenant Segregation**: Database queries filtering tenders and evidence enforce `WHERE organization_id = :org_id`.
 2. **Preventing Self-Orphaning**: The last remaining `admin` of an organization cannot be deleted or downgraded.
 3. **Audit Logging**: Every invitation, role change, and member revocation is written to the immutable audit log with actor ID, timestamp, and client IP.
+

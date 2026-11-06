@@ -12,6 +12,9 @@ permitted_tools:
   - "analyze_tender"
   - "get_tender_requirements"
   - "request_human_review"
+  - "discover_opportunities"
+  - "match_opportunity"
+  - "check_tender_amendments"
 collaboration:
   triggers:
     - "room.document_uploaded"

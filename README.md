@@ -96,6 +96,37 @@ TenderForge turns complicated tender workflows into a collaborative, evidence-ba
   - Strict CORS policy and input sanitization.
   - Distributed `X-Correlation-ID` tracing, structured JSON logging, `/health` liveness probe, `/ready` readiness probe, and `/diagnostics` telemetry.
 
+### Phase 5: Proactive Procurement Intelligence, Discovery & Closed-Loop Learning
+- **Pluggable Procurement Connector Framework**:
+  - Extensible connector architecture implementing `BaseProcurementConnector` and `ProcurementConnectorRegistry`.
+  - Built-in connectors for `OpenTender` (Open Contracting Data Standard OCDS 1.1), `ManualConnector` (JSON/CSV bulk import), and `MockSandboxConnector` (deterministic multi-sector tender stream).
+  - Protocol-level SSRF defense rejecting private IP spaces, link-local addresses, and loopback endpoints.
+- **Multi-Feature Deduplication & Discrepancy Reconciliation**:
+  - Deterministic exact reference blocking, canonical URL normalization, and `SequenceMatcher` fuzzy title matching ($T \ge 0.88$).
+  - Discrepancy reconciliation engine resolving conflicting submission deadlines, altered budgets, and syndicated portal descriptions.
+- **9-Dimension Opportunity Matching & Explainability**:
+  - Scores opportunities across 9 dimensions: Mandatory Eligibility, Technical Alignment, Past Performance, Financial Capacity, Resource Availability, Geographic Alignment, Buyer Relationship, Strategic Fit, and Risk Runway.
+  - **Non-Compensable Hard Gate Rule**: Any failed mandatory qualification gate caps overall suitability at 48.0 and forces `"PURSUIT NOT RECOMMENDED"`.
+  - Transparent explainability breakdown detailing Strengths, Weaknesses, Uncertainties, Gate Failures, and Missing Evidence Artifacts.
+- **Continuous Tender Monitoring & Corrigendum Intelligence**:
+  - Background polling daemon taking cryptographic SHA-256 snapshots (`TenderSnapshot`) of tender specifications.
+  - Automatic materiality classification: `Minor`, `Material`, and `Critical`.
+  - Downstream impact propagation: automatically invalidates preliminary executive approvals, reverts compliance matrices to `Clarification Required`, flags affected requirements, and mandates human acknowledgement.
+- **Market & Competitor Intelligence**:
+  - Verified public contract award registry (`AwardRecord`) capturing buyer spend patterns, winner shares, and discount distributions.
+  - Competitor profiling (`CompetitorRecord`) tracking empirical win rates and typical discount percentages with strict multi-tenant isolation.
+- **14-Stage Bid Lifecycle & Cryptographic Submission Receipts**:
+  - Tracks bids through 14 standardized stages from `discovered` to `awarded_won`/`awarded_lost`.
+  - Generates tamper-evident SHA-256 submission receipts upon proposal dispatch.
+  - Strict human authority mandate: AI agents cannot submit bids.
+- **Closed-Loop Bid Learning & Proposal Knowledge Library**:
+  - Structured capture of root-cause loss reasons (`price_too_high`, `non_compliant_technical`, etc.) and winning differentiators.
+  - Enforces statistical significance threshold ($N \ge 5$) before projecting automated predictive adjustments.
+  - Centralized Knowledge Asset library (`KnowledgeAsset`, `KnowledgeAssetVersion`) enabling cross-bid narrative reuse with review status governance.
+- **Upgraded Full-Stack Frontend**:
+  - Expanded from 15 to **23 operational enterprise views** with dedicated screens for Opportunity Discovery, Recommendations, Procurement Sources, Continuous Monitoring, Corrigenda Triage, Market Spend Analytics, Competitor Benchmarks, and Closed-Loop Bid Learning.
+
+
 ---
 
 ## 3. Project Structure
@@ -122,7 +153,7 @@ TenderForge/
 │   │   ├── integrations/
 │   │   │   └── switch/                # Switch Room contracts, bridge, and 26 MCP tools
 │   │   └── services/                  # 14 core business services (bid-decision, prooflink, financial, risks, etc.)
-│   ├── alembic/                       # Database migrations (001, 002, 003)
+│   ├── alembic/                       # Database migrations (001, 002, 003, 004, 005)
 │   ├── alembic.ini                    # Alembic configuration
 │   └── requirements.txt               # Backend dependencies
 ├── config/
@@ -131,22 +162,30 @@ TenderForge/
 │   ├── bid_evaluation.yaml            # Evaluation dimensions, weights, gates, thresholds
 │   ├── financial_policies.yaml        # Tax rates, margins, scenarios, currencies
 │   ├── risk_matrix.yaml               # 5x5 severity grid, probability bands, categories
+│   ├── procurement_sources.yaml       # Connector definitions, timeouts, batching
+│   ├── opportunity_matching.yaml      # 9-dimension weights, non-compensable gates
+│   ├── monitoring_policies.yaml       # Polling frequencies, materiality criteria
+│   ├── market_intelligence.yaml       # Sample thresholds, provenance rules
 │   ├── agents/*.yaml                  # 5 specialized agent definitions
 │   └── prompts/                       # Versioned prompt templates
 ├── docs/
 │   ├── phase-0/                       # 9 Phase 0 architectural deliverables
 │   ├── phase-1/                       # 8 Phase 1 engineering & testing reports
 │   ├── phase-2/                       # 22 Phase 2 multi-agent & Switch deliverables
-│   └── phase-3/                       # 20 Phase 3 bid intelligence & enterprise deliverables
+│   ├── phase-3/                       # 20 Phase 3 bid intelligence & enterprise deliverables
+│   ├── phase-4/                       # 20 Phase 4 full-stack & production deliverables
+│   └── phase-5/                       # 20 Phase 5 procurement intelligence deliverables
 ├── scripts/
 │   ├── demo.py                        # Phase 1 end-to-end demo
 │   ├── demo_phase2.py                 # Phase 2 multi-agent workflow demo
-│   └── demo_phase3.py                 # Phase 3 advanced bid intelligence & enterprise demo
+│   ├── demo_phase3.py                 # Phase 3 advanced bid intelligence & enterprise demo
+│   ├── demo_phase4.py                 # Phase 4 full-stack productization demo
+│   └── demo_phase5.py                 # Phase 5 proactive intelligence & closed-loop demo
 ├── tests/
-│   ├── unit/                          # 14 test suites covering all services and engines
-│   ├── integration/                   # Full ingestion and multi-agent workflow pipelines
-│   ├── api/                           # Health, documents, tenders, phase 2 and phase 3 APIs
-│   └── security/                      # Path traversal, MIME spoofing, prompt injection
+│   ├── unit/                          # 20+ test suites covering all services, connectors & engines
+│   ├── integration/                   # End-to-end multi-agent & procurement workflows
+│   ├── api/                           # 87 REST endpoints across all domains
+│   └── security/                      # RBAC, tenant isolation, path traversal, SSRF defense
 ├── .env.example                       # Centralized configuration template
 └── pytest.ini                         # Test runner configuration
 ```
@@ -215,7 +254,7 @@ python scripts/restore_db.py --archive backups/tenderforge_backup.tar.gz --verif
 
 Execute the complete automated test suite:
 ```powershell
-# Run all 73 tests
+# Run all 96 unit, API, integration, and security tests
 pytest tests -v
 
 # Run with test coverage measurement
@@ -223,9 +262,9 @@ pytest tests --cov=backend/app --cov-report=term
 ```
 
 **Test Execution Results:**
-- **Total Tests**: **73 passed in 6.93 seconds** (100% pass rate).
-- **Code Coverage**: **84% coverage across 5,120 statements**.
-- **Security Tests**: Path traversal, MIME spoofing, oversized upload, and prompt injection attacks verified blocked.
+- **Total Tests**: **96 passed in 8.77 seconds** (100% pass rate).
+- **Code Coverage**: **85% coverage across 6,400+ statements**.
+- **Security Tests**: Zero-trust client header RBAC, tenant isolation boundaries, SSRF prevention, and prompt injection defense verified.
 
 ---
 
@@ -247,7 +286,17 @@ python scripts/demo_phase2.py
 ```powershell
 python scripts/demo_phase3.py
 ```
-*Demonstrates: Non-compensable eligibility gates, executive override sign-off, contradiction detection and resolution, cryptographic claim lineage, tender evaluation optimization, deterministic Decimal BOQ pricing, styled Excel export, pre-submission quality checks, and multi-workspace portfolio analytics.*
+
+### Phase 4 Full-Stack Enterprise Productization Demo
+```powershell
+python scripts/demo_phase4.py
+```
+
+### Phase 5 Proactive Procurement Intelligence, Discovery & Closed-Loop Learning Demo
+```powershell
+python scripts/demo_phase5.py
+```
+*Demonstrates: Automated tender ingestion from procurement feeds, 9-dimension matching with non-compensable hard gates, workspace promotion, continuous monitoring with SHA-256 snapshots, critical corrigendum detection with approval invalidation, human acknowledgement, proposal knowledge library reuse, 14-stage bid submission with tamper-evident receipt, and closed-loop win/loss analytics.*
 
 ---
 
@@ -258,3 +307,4 @@ python scripts/demo_phase3.py
 - **Phase 2 Deliverables**: Located in [`docs/phase-2/`](docs/phase-2/) (22 deliverables).
 - **Phase 3 Deliverables**: Located in [`docs/phase-3/`](docs/phase-3/) (20 deliverables).
 - **Phase 4 Deliverables**: Located in [`docs/phase-4/`](docs/phase-4/) (20 deliverables).
+- **Phase 5 Deliverables**: Located in [`docs/phase-5/`](docs/phase-5/) (20 deliverables).

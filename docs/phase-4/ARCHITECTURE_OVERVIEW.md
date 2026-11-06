@@ -101,3 +101,4 @@ TenderForge is an enterprise-grade, multi-agent tender intelligence and proposal
 | **Authorization** | 5-tier role-based access control (`admin`, `bid_manager`, `proposal_writer`, `reviewer`, `viewer`) with multi-tenant organization boundary enforcement. |
 | **Auditability** | Complete immutable audit log capturing every human decision, agent tool execution, and release export. |
 | **Resilience** | Connection health checks (`/health`, `/ready`, `/diagnostics`), automated database backups with SHA-256 checksums, and graceful degradation for cloud object storage. |
+

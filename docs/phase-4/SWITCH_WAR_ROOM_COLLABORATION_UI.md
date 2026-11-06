@@ -58,3 +58,4 @@ Each agent has bounded responsibilities, dedicated system instructions, and auth
 - **Live Pulse Indicators**: Dynamic green pulsing rings signify active reasoning or tool execution for each agent.
 - **Action Timeline**: Visual chronological feed categorizing agent actions by urgency (`info`, `warning`, `critical`).
 - **One-Click Human Approvals**: Integrated action buttons in the chat feed allow bid managers to approve or revise agent-drafted sections with a single click.
+

@@ -76,3 +76,4 @@ Every inbound request is assigned a unique UUID `X-Correlation-ID` header:
 ### 3.3 Diagnostic Telemetry: `GET /diagnostics`
 - **Purpose**: Provides non-sensitive operational telemetry for DevOps dashboards, Datadog/Grafana monitors, and administrative troubleshooting without leaking secrets.
 - **Fields**: Database pool utilization, storage provider type, configured AI model, JWT token expiration parameters, and server timestamp.
+
