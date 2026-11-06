@@ -70,3 +70,4 @@ This cryptographic digest serves as tamper-evident proof of the exact submission
 AI agents can draft, audit, calculate compliance scores, and suggest narrative improvements, but **AI agents are strictly forbidden from executing bid submission or signing off on proposal delivery**.
 
 The `record_bid_submission` API enforces that `submitted_by_user_id` corresponds to an authenticated human user with pursuit authorization rights (`BidManager` or `Approver` role).
+

@@ -46,3 +46,4 @@ Every query accessing `Workspace`, `Tender`, `CompanyEvidence`, `BidSubmissionRe
 To defend against Server-Side Request Forgery (SSRF) when communicating with external procurement feeds:
 - Non-HTTP/HTTPS protocols (such as `file://`, `gopher://`, `ftp://`) are rejected.
 - Private IPv4 address spaces (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), link-local metadata addresses (`169.254.169.254`), and loopback addresses (`127.0.0.1`, `localhost`, `::1`) are strictly blocked by the connector validation layer.
+

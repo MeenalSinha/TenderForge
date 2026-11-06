@@ -67,3 +67,4 @@ During ingestion, the deduplication engine returns granular counts:
 - `new_count`: Novel, distinct opportunities committed to the repository.
 - `duplicate_count`: Duplicates identified and bypassed.
 - `updated_count`: Existing opportunities updated with richer secondary metadata or amendments.
+

@@ -4,11 +4,14 @@ Switch Integration & MCP Tool Exposure API endpoints for TenderForge.
 
 from __future__ import annotations
 
+import urllib.request
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, Query, status as http_status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from backend.app.core.config import settings
 from backend.app.domain.agents.registry import agent_registry
 from backend.app.infrastructure.database.session import get_db
 from backend.app.integrations.switch.agent_bridge import switch_bridge
@@ -31,6 +34,48 @@ class RoomCommandRequest(BaseModel):
     command_line: str
     user_id: str = "user_lead"
     user_role: str = "Bid Director"
+
+
+@router.get("/switch/status", status_code=http_status.HTTP_200_OK)
+def get_switch_status():
+    """
+    Check actual Switch Mesh connectivity and multi-agent subsystem health.
+    Returns honest, evidence-based status: connected, degraded, disconnected, or not_configured.
+    """
+    agents = agent_registry.list_agents()
+    tools = get_mcp_tools()
+
+    switch_url = settings.SWITCH_API_URL
+    switch_key = settings.SWITCH_API_KEY
+
+    if not switch_url:
+        status_state = "not_configured"
+        message = "Switch Mesh integration is not configured. Running in internal agent broker mode."
+    else:
+        try:
+            req = urllib.request.Request(
+                f"{switch_url.rstrip('/')}/health",
+                headers={"Authorization": f"Bearer {switch_key}"} if switch_key else {},
+            )
+            with urllib.request.urlopen(req, timeout=3.0) as resp:
+                if resp.status == 200:
+                    status_state = "connected"
+                    message = "Switch Mesh connected and synchronized."
+                else:
+                    status_state = "degraded"
+                    message = f"Switch Mesh returned non-200 status: {resp.status}."
+        except Exception as e:
+            status_state = "disconnected"
+            message = f"Switch Mesh unreachable at {switch_url}: {str(e)}."
+
+    return {
+        "status": status_state,
+        "message": message,
+        "agents_registered": len(agents),
+        "tools_registered": len(tools),
+        "switch_url": switch_url or "none",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
 
 
 @router.get("/switch/tools", status_code=http_status.HTTP_200_OK)

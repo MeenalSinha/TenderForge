@@ -10,8 +10,6 @@ export function getAuthHeaders(): Record<string, string> {
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  headers['X-User-Role'] = localStorage.getItem('tf_user_role') || 'Admin';
-  headers['X-User-Id'] = localStorage.getItem('tf_user_id') || 'usr-system-admin';
   return headers;
 }
 

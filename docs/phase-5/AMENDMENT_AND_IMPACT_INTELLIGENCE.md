@@ -81,3 +81,4 @@ When `AmendmentService.record_amendment()` executes:
 
 4. **Human Acknowledgement Gate**:
    The tender is blocked from final submission until a designated pursuit manager or technical architect calls `acknowledge_amendment()`, certifying that the changes have been reviewed and incorporated into the proposal draft.
+

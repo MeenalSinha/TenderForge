@@ -60,3 +60,4 @@ flowchart TD
 Insights flow directly back into the early pipeline:
 1. **Opportunity Matching**: If past outcomes show consistent technical rejections in a specific sub-category (e.g. mainframe hosting), technical capability weighting in that category is penalized until new credentials are added to the Evidence Vault.
 2. **Knowledge Asset Lifecycle**: Narrative assets used in winning proposals receive positive reuse scores and priority ranking, while assets associated with technical non-compliance flags are marked for editorial revision.
+

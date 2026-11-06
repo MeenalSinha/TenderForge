@@ -128,25 +128,9 @@ def get_current_user_profile(
     user = AuthService.get_user_by_id(db, user_id) if user_id else None
 
     if not user:
-        # Fallback dummy representation if running under bypass test headers
         user = AuthService.get_user_by_email(db, claims.get("email", ""))
         if not user:
-            # Create or return test user representation
-            return ResponseEnvelope[UserResponse](
-                success=True,
-                status_code=status.HTTP_200_OK,
-                message="User profile retrieved.",
-                data=UserResponse(
-                    id=user_id or "usr-system-admin",
-                    email=claims.get("email", "admin@tenderforge.local"),
-                    full_name="TenderForge Administrator",
-                    role=claims.get("role", "Admin"),
-                    is_active=True,
-                    is_verified=True,
-                    created_at=settings.utcnow() if hasattr(settings, "utcnow") else datetime.now(),
-                ),
-                correlation_id=correlation_id_ctx.get(),
-            )
+            raise AuthenticationException("User account not found or session has expired.")
 
     return ResponseEnvelope[UserResponse](
         success=True,

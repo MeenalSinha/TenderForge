@@ -55,3 +55,4 @@ When a bid author or `ProposalArchitect` agent integrates a knowledge asset into
 2. **Narrative Injection**: Content from the latest approved version of the asset is written into `ProposalSection.content`.
 3. **Citation & Lineage**: The section records the asset ID and version in its metadata, enabling audit traceability.
 4. **Utilization Telemetry**: Increments `asset.times_reused` by 1 and records the usage event in the organization audit trail.
+

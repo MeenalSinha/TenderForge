@@ -70,3 +70,4 @@ When assessing competitors in a category:
   Tracks standard deviation of competitor bids relative to published estimates, informing whether a given competitor bids aggressively on price or commands a premium on technical reputation.
 - **Differentiation In Proposals**:
   Enables the `ProposalArchitect` agent to emphasize unique differentiators (e.g. higher SLAs, dedicated local support) when competing against specific known rivals.
+

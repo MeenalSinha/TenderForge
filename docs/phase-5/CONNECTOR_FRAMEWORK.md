@@ -147,3 +147,4 @@ class CustomGovPortalConnector(BaseProcurementConnector):
 
 connector_registry.register("custom_gov_portal", CustomGovPortalConnector)
 ```
+

@@ -60,3 +60,4 @@ The `MarketIntelligenceService.get_market_analytics()` endpoint computes:
 - `GET /api/v1/market/awards`: Filter awards by buyer, category, date range, or supplier.
 - `GET /api/v1/market/analytics`: Aggregated market benchmarks and buyer breakdown.
 - `POST /api/v1/market/awards`: Ingest verified public award records (Admin / Business Analyst only).
+

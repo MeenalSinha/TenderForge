@@ -121,3 +121,4 @@ flowchart TD
 | **Agent Integration** | Switch Room Protocol & Tool Catalog | `backend/app/integrations/switch/` |
 | **Configuration** | YAML Configuration (`config/*.yaml`) | `config/` |
 | **Frontend** | React, TypeScript, Tailwind CSS | `frontend/src/App.tsx`, `frontend/dist/` |
+

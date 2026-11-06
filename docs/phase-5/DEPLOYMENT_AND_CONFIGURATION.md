@@ -70,3 +70,4 @@ Tender continuous monitoring executes via the background polling daemon:
 python -m backend.app.services.tender_monitoring_service --poll-all
 ```
 In containerized production, this runs as a Celery/Beat periodic worker service or systemd timer.
+

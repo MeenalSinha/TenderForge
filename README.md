@@ -1,8 +1,9 @@
 # TenderForge
 
-> **From Tender to Trustworthy Proposal.**
-> *Flip the Switch Hackathon 2026 — Track: Best Business Workflow*
-> *Core Technology: Switch AI + Multi-Agent Collaboration + Cryptographic ProofLink Traceability*
+> **From Tender to Trustworthy Proposal.**  
+> *Flip the Switch Hackathon 2026 — Track: Best Business Workflow*  
+> *Core Technology: Switch AI + Multi-Agent Collaboration + Cryptographic ProofLink Traceability*  
+> **Release Status:** **RELEASE READY WITH DOCUMENTED LIMITATIONS** (101 Tests Passing, 81% Statement Coverage)
 
 ---
 
@@ -254,45 +255,63 @@ python scripts/restore_db.py --archive backups/tenderforge_backup.tar.gz --verif
 
 Execute the complete automated test suite:
 ```powershell
-# Run all 96 unit, API, integration, and security tests
+# Run all 101 unit, API, integration, and security tests
 pytest tests -v
 
 # Run with test coverage measurement
 pytest tests --cov=backend/app --cov-report=term
 ```
 
-**Test Execution Results:**
-- **Total Tests**: **96 passed in 8.77 seconds** (100% pass rate).
-- **Code Coverage**: **85% coverage across 6,400+ statements**.
-- **Security Tests**: Zero-trust client header RBAC, tenant isolation boundaries, SSRF prevention, and prompt injection defense verified.
+**Final Test Execution Results:**
+- **Total Tests**: **101 passed in 8.49 seconds** (100% pass rate).
+- **Code Coverage**: **81% statement coverage across 7,142 statements**.
+- **REST Operations**: **88 OpenAPI Paths, 106 HTTP Operations** across 24 domain routers.
+- **Security Hardening**: Zero client-header trust, SSRF defenses on external feeds, MIME spoofing protection, path traversal defenses, and production CORS isolation verified.
 
 ---
 
-## 6. End-to-End Demonstrations
+## 6. End-to-End Demonstrations & Demo Accounts
+
+### 6.1 Pre-Seeded Verified Demo Profiles
+TenderForge provides a production-grade database seeding utility (`scripts/seed_demo_data.py`) creating three pre-verified accounts with bcrypt-hashed passwords:
+
+| Role | Email | Password | Intended Capabilities |
+|:---|:---|:---|:---|
+| **System Admin** | `admin@tenderforge.com` | `TenderForge2026!Admin` | Full administrative control, team invitations, source configuration |
+| **Proposal Author** | `author@tenderforge.com` | `TenderForge2026!Author` | Document ingestion, tender creation, proposal drafting, BOQ costing |
+| **Compliance Reviewer** | `reviewer@tenderforge.com` | `TenderForge2026!Review` | ProofLink verification, compliance audit, risk harvesting |
+
+To seed or reset demo users:
+```powershell
+python scripts/seed_demo_data.py
+```
+
+### 6.2 Executable Lifecycle Demonstrations
 
 TenderForge includes reproducible demonstration scripts exercising the full platform:
 
-### Phase 1 Core Ingestion & Intelligence Demo
+#### Phase 1 Core Ingestion & Intelligence Demo
 ```powershell
-python scripts/demo.py
+python scripts/demo_phase1.py
 ```
 
-### Phase 2 Multi-Agent Collaborative War Room Demo
+#### Phase 2 Multi-Agent Collaborative War Room Demo
 ```powershell
 python scripts/demo_phase2.py
 ```
 
-### Phase 3 Advanced Bid Intelligence & Enterprise Workspace Demo
+#### Phase 3 Advanced Bid Intelligence & Enterprise Workspace Demo
 ```powershell
 python scripts/demo_phase3.py
 ```
+*Demonstrates: 7-dimension Bid/No-Bid intelligence, executive sign-off authority, ProofLink contradiction detection & freshness audit, claim lineage hashing, criteria extraction, deterministic Decimal BOQ pricing, scenario modeling (Base, Conservative, Aggressive), Excel export, centralized risk registry, automated approval invalidation, quality check placeholder scanning, and multi-workspace portfolio analytics.*
 
-### Phase 4 Full-Stack Enterprise Productization Demo
+#### Phase 4 Full-Stack Enterprise Productization Demo
 ```powershell
 python scripts/demo_phase4.py
 ```
 
-### Phase 5 Proactive Procurement Intelligence, Discovery & Closed-Loop Learning Demo
+#### Phase 5 Proactive Procurement Intelligence, Discovery & Closed-Loop Learning Demo
 ```powershell
 python scripts/demo_phase5.py
 ```
@@ -300,8 +319,25 @@ python scripts/demo_phase5.py
 
 ---
 
-## 7. Documentation Index
+## 7. Master Documentation Index & Final Audit Reports
 
+- **Final Audit Reports (Release Verification)**: Located in [`docs/final-audit/`](docs/final-audit/) (16 comprehensive audit reports):
+  1. [`REPOSITORY_AUDIT.md`](docs/final-audit/REPOSITORY_AUDIT.md): Complete repository tree, component mapping, and hygiene.
+  2. [`PHASE_0_TO_5_VERIFICATION.md`](docs/final-audit/PHASE_0_TO_5_VERIFICATION.md): Phase-by-phase functional verification.
+  3. [`API_ENDPOINT_AUDIT.md`](docs/final-audit/API_ENDPOINT_AUDIT.md): Inventory of 88 OpenAPI paths and 106 HTTP operations.
+  4. [`DATABASE_INTEGRITY_REPORT.md`](docs/final-audit/DATABASE_INTEGRITY_REPORT.md): 51 relational tables, 5 migrations, fresh DB test.
+  5. [`FRONTEND_FUNCTIONAL_AUDIT.md`](docs/final-audit/FRONTEND_FUNCTIONAL_AUDIT.md): React views, dynamic Switch status, auth flows.
+  6. [`AUTHENTICATION_AND_RBAC_AUDIT.md`](docs/final-audit/AUTHENTICATION_AND_RBAC_AUDIT.md): Bcrypt, signed JWT, zero client-header trust.
+  7. [`AGENT_AND_SWITCH_AUDIT.md`](docs/final-audit/AGENT_AND_SWITCH_AUDIT.md): 5 specialized agents, 31 MCP tools, Switch Mesh status checks.
+  8. [`SECURITY_AUDIT.md`](docs/final-audit/SECURITY_AUDIT.md): OWASP Top 10 evaluation, SSRF defenses, CORS hardening.
+  9. [`HARDCODING_AUDIT.md`](docs/final-audit/HARDCODING_AUDIT.md): Elimination of hardcoded secrets and mock shortcuts.
+  10. [`PERFORMANCE_AND_CODE_QUALITY.md`](docs/final-audit/PERFORMANCE_AND_CODE_QUALITY.md): Decimal arithmetic, N+1 query prevention.
+  11. [`TEST_REPORT.md`](docs/final-audit/TEST_REPORT.md): 101 tests, 100% pass rate, 8.49s runtime, 81% statement coverage.
+  12. [`END_TO_END_VALIDATION.md`](docs/final-audit/END_TO_END_VALIDATION.md): Walkthrough of complete 14-stage lifecycle.
+  13. [`DEPLOYMENT_READINESS.md`](docs/final-audit/DEPLOYMENT_READINESS.md): Docker Compose, PostgreSQL health check, Nginx runbook.
+  14. [`DOCUMENTATION_AUDIT.md`](docs/final-audit/DOCUMENTATION_AUDIT.md): Cross-phase reconciliation and master manifest.
+  15. [`KNOWN_LIMITATIONS.md`](docs/final-audit/KNOWN_LIMITATIONS.md): Transparent operational boundaries and fallbacks.
+  16. [`FINAL_RELEASE_REPORT.md`](docs/final-audit/FINAL_RELEASE_REPORT.md): Executive release sign-off and classification.
 - **Phase 0 Deliverables**: Located in [`docs/phase-0/`](docs/phase-0/) (9 deliverables).
 - **Phase 1 Deliverables**: Located in [`docs/phase-1/`](docs/phase-1/) (8 deliverables).
 - **Phase 2 Deliverables**: Located in [`docs/phase-2/`](docs/phase-2/) (22 deliverables).

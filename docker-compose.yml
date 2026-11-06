@@ -17,7 +17,7 @@ services:
     networks:
       - tenderforge_net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U tenderforge -d tenderforge_db"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-tenderforge} -d $${POSTGRES_DB:-tenderforge_db}"]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -122,3 +122,4 @@ Phase 5 registers 6 new production API routers mounted under `/api/v1`, expandin
 ### `POST /api/v1/knowledge/assets/{asset_id}/use`
 - **Description**: Injects an approved narrative into an active proposal section and tracks reuse count.
 - **Roles**: `Admin`, `BidManager`, `Author`.
+

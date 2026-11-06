@@ -70,3 +70,4 @@ The engine does not output a black-box percentage. Every evaluation populates an
 ```
 
 If gates fail, `gate_failures` lists the specific unmet criteria and `missing_evidence` specifies the document needed to unlock eligibility.
+

@@ -93,3 +93,4 @@ TenderForge Enterprise Navigation
   - 14-stage bid lifecycle pipeline funnel.
   - Root-cause loss reason distribution chart ($N \ge 5$ threshold indicator).
   - Reusable Knowledge Asset library with one-click narrative injection into proposals.
+

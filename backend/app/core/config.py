@@ -33,7 +33,13 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     LOG_LEVEL: str = "INFO"
     API_V1_PREFIX: str = "/api/v1"
-    CORS_ORIGINS: List[str] = ["*"]
+    CORS_ORIGINS: List[str] = [
+        "http://localhost:8000",
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:8000",
+        "http://127.0.0.1:5173",
+    ]
 
     # Authentication & Security
     JWT_SECRET_KEY: str = "tenderforge-enterprise-secret-key-change-in-production-2026"
@@ -41,6 +47,11 @@ class Settings(BaseSettings):
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours
     BCRYPT_ROUNDS: int = 4  # Fast for dev & test suites, configurable to 12 in production
     AUTH_RATE_LIMIT_PER_MINUTE: int = 30
+
+    # Switch Room Integration
+    SWITCH_API_URL: Optional[str] = None
+    SWITCH_API_KEY: Optional[str] = None
+    SWITCH_WEBHOOK_SECRET: Optional[str] = None
 
     # Database
     DATABASE_URL: str = "sqlite:///./tenderforge.db"
@@ -113,12 +124,20 @@ class Settings(BaseSettings):
                     "CRITICAL PRODUCTION SECURITY ERROR: Default database credentials detected in DATABASE_URL in production environment. "
                     "You must set a secure production database password via POSTGRES_PASSWORD and DATABASE_URL."
                 )
+            if "*" in self.CORS_ORIGINS:
+                raise ValueError(
+                    "CRITICAL PRODUCTION SECURITY ERROR: Wildcard CORS origin ('*') is not permitted in production with credentials enabled. "
+                    "Configure specific trusted origins via CORS_ORIGINS or application configuration."
+                )
 
     def _load_yaml_configs(self) -> None:
         app_path = Path(self.CONFIG_PATH_APP)
         if app_path.exists():
             with open(app_path, "r", encoding="utf-8") as f:
                 self._app_yaml = yaml.safe_load(f) or {}
+                sec_origins = self._app_yaml.get("security", {}).get("allowed_origins")
+                if sec_origins and isinstance(sec_origins, list) and not os.environ.get("CORS_ORIGINS"):
+                    self.CORS_ORIGINS = sec_origins
 
         doc_path = Path(self.CONFIG_PATH_DOC_PROCESSING)
         if doc_path.exists():

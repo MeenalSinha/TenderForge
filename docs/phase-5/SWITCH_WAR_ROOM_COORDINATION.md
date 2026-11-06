@@ -43,3 +43,4 @@ To maintain complete accountability in public procurement:
 1. **Agent Autonomy Limits**: Agents propose, summarize, benchmark, draft, and audit. Agents can never submit a bid, sign a tender certification, or unilaterally decline an opportunity without human confirmation.
 2. **Deterministic Tool Execution**: All Switch tool handlers execute verified backend services (`OpportunityMatchingService`, `AmendmentService`, etc.) ensuring identical outcomes whether invoked via REST API or Switch agent chat.
 3. **Structured Tool Context**: Switch room messages preserve full tool execution telemetry, parameters, and structured JSON results for auditability.
+
