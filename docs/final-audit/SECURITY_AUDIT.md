@@ -114,3 +114,4 @@ A comprehensive security audit of TenderForge was executed, evaluating the appli
 | Path Traversal in Ingestion | High | Remediated | `tests/security/test_security_attacks.py` |
 | MIME-Type Spoofing | Medium | Remediated | `tests/security/test_security_attacks.py` |
 | Wildcard Production CORS | High | Remediated | `tests/unit/test_config.py` |
+

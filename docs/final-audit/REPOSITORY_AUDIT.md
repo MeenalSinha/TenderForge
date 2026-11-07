@@ -120,3 +120,4 @@ TenderForge/
 2. **Deterministic Builds**: Python requirements locked via `pyproject.toml` and verified on Python 3.14. Frontend builds cleanly into self-contained HTML/JS bundle.
 3. **Database Migration Lineage**: Clean single-lineage Alembic migration tree (001 -> 002 -> 003 -> 004 -> 005) verified with zero branch conflicts or orphaned revisions.
 4. **Clean Git State**: No merge conflicts, untracked temporary files, or uncommitted debug logging.
+

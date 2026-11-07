@@ -114,3 +114,4 @@ flowchart TD
 2. **Loading States**: All asynchronous API calls display animated spinner states or skeleton cards, preventing visual jumping.
 3. **Error Boundaries**: Failed network calls trigger toast notifications or inline alert banners with descriptive error text from `ResponseEnvelope`.
 4. **Contrast & Typography**: Follows WCAG 2.1 AA standards using high-contrast slate, emerald, and indigo palettes on dark theme.
+

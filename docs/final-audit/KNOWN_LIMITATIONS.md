@@ -52,3 +52,4 @@ TenderForge rejects artificial "mock everything" illusions: when an external ser
 ## 3. Engineering Conclusion
 
 None of the above documented limitations compromise the core architecture, security, or business logic of TenderForge. Each limitation is handled gracefully with deterministic fallbacks and transparent status reporting.
+

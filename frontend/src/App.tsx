@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { apiRequest } from './api/client';
 import { Tender, User } from './types';
 
 export default function App() {
   // Auth State
-  const [token, setToken] = useState<string>(localStorage.getItem('tf_token') || '');
+  const [, setToken] = useState<string>(localStorage.getItem('tf_token') || '');
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState<boolean>(true);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -34,8 +34,6 @@ export default function App() {
   const [opportunities, setOpportunities] = useState<any[]>([]);
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [sources, setSources] = useState<any[]>([]);
-  const [snapshots, setSnapshots] = useState<any[]>([]);
-  const [amendments, setAmendments] = useState<any[]>([]);
   const [marketTrends, setMarketTrends] = useState<any>(null);
   const [competitors, setCompetitors] = useState<any[]>([]);
   const [bidLearning, setBidLearning] = useState<any>(null);
@@ -88,7 +86,7 @@ export default function App() {
 
   async function checkSwitchHealth() {
     try {
-      const res = await apiRequest<any>('/switch/status');
+      const res = (await apiRequest<any>('/switch/status')) as any;
       if (res && res.status) {
         setSwitchStatus(res);
       }

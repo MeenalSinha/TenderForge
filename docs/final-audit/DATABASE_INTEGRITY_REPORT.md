@@ -117,3 +117,4 @@ INFO  [alembic.runtime.migration] Running upgrade 004 -> 005, phase5_procurement
 - Constraint validation: All Foreign Key relationships resolve without circular dependency locks.
 - Column types: Exact numeric types (`Numeric(18, 4)`) used for all currency calculations to prevent floating point drift.
 - Timestamps: All temporal columns declare timezone-aware UTC timestamps (`datetime.now(timezone.utc)`).
+

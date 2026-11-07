@@ -282,3 +282,4 @@ All 88 paths and 106 operations were verified through:
 2. Schema validation with Pydantic v2 ensuring strict type conversion and rejection of malformed payloads.
 3. Server-side hierarchical role checks ensuring least privilege.
 4. OpenAPI 3.1.0 schema export compliance (`/openapi.json`).
+

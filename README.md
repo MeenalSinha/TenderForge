@@ -277,9 +277,9 @@ TenderForge provides a production-grade database seeding utility (`scripts/seed_
 
 | Role | Email | Password | Intended Capabilities |
 |:---|:---|:---|:---|
-| **System Admin** | `admin@tenderforge.com` | `TenderForge2026!Admin` | Full administrative control, team invitations, source configuration |
-| **Proposal Author** | `author@tenderforge.com` | `TenderForge2026!Author` | Document ingestion, tender creation, proposal drafting, BOQ costing |
-| **Compliance Reviewer** | `reviewer@tenderforge.com` | `TenderForge2026!Review` | ProofLink verification, compliance audit, risk harvesting |
+| **System Admin** | `admin@tenderforge.com` | `TenderForgeAdmin2026!` | Full administrative control, team invitations, source configuration |
+| **Proposal Author** | `author@tenderforge.com` | `TenderForgeAuthor2026!` | Document ingestion, tender creation, proposal drafting, BOQ costing |
+| **Compliance Reviewer** | `reviewer@tenderforge.com` | `TenderForgeReviewer2026!` | ProofLink verification, compliance audit, risk harvesting |
 
 To seed or reset demo users:
 ```powershell

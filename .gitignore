@@ -27,6 +27,7 @@ env/
 htmlcov/
 
 # IDE and OS artifacts
+node_modules/
 .vscode/
 .idea/
 .DS_Store

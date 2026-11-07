@@ -116,3 +116,4 @@ The status endpoint `GET /api/v1/switch/status` was redesigned to eliminate fake
 - `tests/unit/test_agent_tools.py::test_mcp_tools_definitions_count`: PASSED (31 tools verified).
 - `tests/unit/test_agent_tools.py::test_agent_rbac_tool_execution`: PASSED (Unauthorized callers blocked).
 - `tests/security/test_auth_audit.py::test_switch_status_endpoint`: PASSED (Status schema verified).
+

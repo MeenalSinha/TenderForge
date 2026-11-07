@@ -82,3 +82,4 @@ class CorrelationIdMiddleware:
   - JavaScript bundle: ~165 KB gzipped.
   - CSS stylesheet: ~18 KB gzipped.
 - Zero external CDN dependencies; all fonts and icons are embedded locally, allowing air-gapped deployment.
+

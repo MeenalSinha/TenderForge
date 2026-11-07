@@ -77,9 +77,9 @@ To enable rapid evaluator verification without compromising security, the databa
 
 | Account Role | Email | Seeded Password | Purpose |
 |:---|:---|:---|:---|
-| **System Admin** | `admin@tenderforge.com` | `TenderForge2026!Admin` | Full administrative access, organization & user management |
-| **Proposal Author** | `author@tenderforge.com` | `TenderForge2026!Author` | Document upload, drafting proposals, BOQ costing |
-| **Compliance Reviewer**| `reviewer@tenderforge.com` | `TenderForge2026!Review` | ProofLink verification, compliance audit, risk harvesting |
+| **System Admin** | `admin@tenderforge.com` | `TenderForgeAdmin2026!` | Full administrative access, organization & user management |
+| **Proposal Author** | `author@tenderforge.com` | `TenderForgeAuthor2026!` | Document upload, drafting proposals, BOQ costing |
+| **Compliance Reviewer**| `reviewer@tenderforge.com` | `TenderForgeReviewer2026!` | ProofLink verification, compliance audit, risk harvesting |
 
 ---
 
@@ -94,3 +94,4 @@ All authentication and RBAC requirements are continuously validated by dedicated
 - `tests/security/test_auth_audit.py::test_auth_me_no_fallback_admin`: PASSED (No synthetic fallback)
 - `tests/security/test_auth_audit.py::test_invalid_login_credentials`: PASSED (401)
 - `tests/unit/test_agent_tools.py::test_agent_rbac_tool_execution`: PASSED (Role enforcement on MCP tools)
+

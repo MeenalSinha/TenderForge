@@ -66,3 +66,4 @@ Automated test `tests/unit/test_config.py::test_settings_masked_dict` confirms t
 - **Automated Tests**: All tests use isolated in-memory or temporary database sessions (`db_session` fixture in `tests/conftest.py`) with automatic rollback. Zero test data bleeds into production or local SQLite storage.
 - **Demonstration Scripts**: Scripts `demo_phase3.py` and `demo_phase5.py` use randomized timestamps (`datetime.now().strftime(...)`) and dynamic UUIDs for organizations, tenders, and workspaces, ensuring repeatable execution without primary key collisions.
 - **Demo Data Seeding**: `scripts/seed_demo_data.py` uses production-grade bcrypt password hashing and standard Pydantic validation.
+
