@@ -53,3 +53,4 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({ collapsed = false }) => {
     </div>
   );
 };
+

@@ -77,6 +77,7 @@ export default function App() {
   // Navigation & Workspace State
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Primary Data State
@@ -543,11 +544,16 @@ export default function App() {
       {/* 1. Left Collapsible Sidebar (Grouped A-F with Brand Logo & Bottom Cards) */}
       <Sidebar
         activeTab={activeTab}
-        onSelectTab={setActiveTab}
+        onSelectTab={(tab) => {
+          setActiveTab(tab);
+          setMobileMenuOpen(false);
+        }}
         switchStatus={switchStatus}
         organizationName={organizations[0]?.name || 'Apex Global Defense'}
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        mobileOpen={mobileMenuOpen}
+        onCloseMobile={() => setMobileMenuOpen(false)}
       />
 
       {/* 2. Main Content Canvas */}
@@ -565,6 +571,8 @@ export default function App() {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onOpenNotifications={() => setActiveTab('deadlines')}
+          onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
+          mobileMenuOpen={mobileMenuOpen}
         />
 
         {/* Dynamic View Canvas */}

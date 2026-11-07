@@ -154,3 +154,4 @@ export const KnowledgeLibraryView: React.FC<KnowledgeLibraryViewProps> = ({
     </div>
   );
 };
+

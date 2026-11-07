@@ -205,3 +205,4 @@ export const OpportunitiesView: React.FC<OpportunitiesViewProps> = ({
     </div>
   );
 };
+

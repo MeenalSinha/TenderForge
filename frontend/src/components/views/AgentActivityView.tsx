@@ -190,3 +190,4 @@ export const AgentActivityView: React.FC<AgentActivityViewProps> = ({
     </div>
   );
 };
+

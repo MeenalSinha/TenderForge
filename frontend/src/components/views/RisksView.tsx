@@ -138,3 +138,4 @@ export const RisksView: React.FC<RisksViewProps> = ({
     </div>
   );
 };
+

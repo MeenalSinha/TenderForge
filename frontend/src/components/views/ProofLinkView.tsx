@@ -170,3 +170,4 @@ export const ProofLinkView: React.FC<ProofLinkViewProps> = ({
     </div>
   );
 };
+

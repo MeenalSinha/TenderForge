@@ -18,6 +18,12 @@ interface DeliverablesViewProps {
 export const DeliverablesView: React.FC<DeliverablesViewProps> = ({
   activeTender,
 }) => {
+  const [downloadSuccess, setDownloadSuccess] = React.useState(false);
+
+  const handleDownload = () => {
+    setDownloadSuccess(true);
+    setTimeout(() => setDownloadSuccess(false), 4000);
+  };
   const deliverables = [
     {
       id: 'deliv-1',
@@ -67,10 +73,18 @@ export const DeliverablesView: React.FC<DeliverablesViewProps> = ({
           </p>
         </div>
         <button
-          onClick={() => alert('Downloading complete submission ZIP bundle with cryptographic verification manifest.')}
-          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-lg shadow-emerald-950 transition"
+          onClick={handleDownload}
+          className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-lg shadow-emerald-950 transition active:scale-95"
         >
-          <Download className="w-4 h-4" /> Download Complete ZIP Bundle
+          {downloadSuccess ? (
+            <>
+              <CheckCircle2 className="w-4 h-4 text-white" /> Bundle Manifest Generated
+            </>
+          ) : (
+            <>
+              <Download className="w-4 h-4" /> Download Complete ZIP Bundle
+            </>
+          )}
         </button>
       </div>
 
@@ -135,3 +149,4 @@ export const DeliverablesView: React.FC<DeliverablesViewProps> = ({
     </div>
   );
 };
+

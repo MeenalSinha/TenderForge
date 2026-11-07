@@ -138,3 +138,4 @@ export const AmendmentsView: React.FC<AmendmentsViewProps> = ({
     </div>
   );
 };
+

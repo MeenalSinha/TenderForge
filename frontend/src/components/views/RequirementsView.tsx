@@ -125,3 +125,4 @@ export const RequirementsView: React.FC<RequirementsViewProps> = ({
     </div>
   );
 };
+

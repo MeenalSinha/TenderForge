@@ -129,3 +129,4 @@ export const CompetitorBenchmarksView: React.FC<CompetitorBenchmarksViewProps> =
     </div>
   );
 };
+

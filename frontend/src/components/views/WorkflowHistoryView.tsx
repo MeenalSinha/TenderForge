@@ -159,3 +159,4 @@ export const WorkflowHistoryView: React.FC<WorkflowHistoryViewProps> = ({
     </div>
   );
 };
+

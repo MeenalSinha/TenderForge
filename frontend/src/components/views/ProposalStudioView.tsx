@@ -176,3 +176,4 @@ Our transparent pricing model leverages Python Decimal deterministic arithmetic 
     </div>
   );
 };
+

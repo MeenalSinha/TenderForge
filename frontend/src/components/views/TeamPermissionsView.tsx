@@ -131,3 +131,4 @@ export const TeamPermissionsView: React.FC<TeamPermissionsViewProps> = ({
     </div>
   );
 };
+

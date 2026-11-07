@@ -171,3 +171,4 @@ export const MarketIntelligenceView: React.FC<MarketIntelligenceViewProps> = ({
     </div>
   );
 };
+

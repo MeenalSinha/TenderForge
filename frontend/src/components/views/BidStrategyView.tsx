@@ -155,3 +155,4 @@ export const BidStrategyView: React.FC<BidStrategyViewProps> = ({
     </div>
   );
 };
+

@@ -143,3 +143,4 @@ export const IntelligenceView: React.FC<IntelligenceViewProps> = ({
     </div>
   );
 };
+

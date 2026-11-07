@@ -149,3 +149,4 @@ export const BidLearningView: React.FC<BidLearningViewProps> = ({
     </div>
   );
 };
+
